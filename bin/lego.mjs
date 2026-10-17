@@ -47,7 +47,9 @@ if (cmd === 'build') {
   await browser.close(); console.log(`→ ${path.relative(process.cwd(), path.join(out, `sheet${sfx}.png`))}, hero${sfx}.png`);
 } else if (cmd === 'parts') {
   const { CATALOG } = await import('../engine/catalog.mjs'); const words = rest.map((w) => w.toLowerCase());
-  const hits = Object.values(CATALOG).filter((p) => words.every((w) => `${p.id} ${p.name} ${p.cat}`.toLowerCase().includes(w)));
+  const txt = (p) => `${p.id} ${p.name} ${p.cat}`.toLowerCase(); let hits = Object.values(CATALOG).filter((p) => words.every((w) => txt(p).includes(w)));
+  if (!hits.length && words.length > 1) { hits = Object.values(CATALOG).filter((p) => words.some((w) => txt(p).includes(w))); if (hits.length) console.log(`(no part matches all of "${words.join(' ')}" — parts matching any of them:)`); }
+  if (!hits.length) console.log(`no part matches "${words.join(' ')}". Build it from basic parts (see docs/TECHNIQUES.md), or look at docs/gallery/*.png for a part that has the shape you need.`);
   for (const p of hits.slice(0, 80)) console.log(`${p.id.padEnd(11)} ${p.name.slice(0, 60).padEnd(60)} ${p.w}×${p.d} · ${p.h}p · ${p.studs.length} studs${p.female.length ? '' : ' · no anti-studs'}`);
   if (hits.length > 80) console.log(`… ${hits.length - 80} more — narrow the search`);
 } else if (cmd === 'part') {

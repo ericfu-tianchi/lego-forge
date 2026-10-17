@@ -30,7 +30,8 @@ Create the set: `node bin/lego.mjs new <name>` → `sets/<name>/brief.md` and `b
 - **Palette**: 4–8 colours from the real thing (§4).
 - **Out**: what you leave out on purpose.
 
-**Questions.** Ask the user only when an answer would change the result a lot *and* cannot be inferred ("a computer" — a 1980s beige
+**Questions.** Ask when the request cannot be built as asked (a whole city, "every building") — propose the scoped-down set you would
+build and let them confirm. Otherwise ask only when an answer would change the result a lot *and* cannot be inferred ("a computer" — a 1980s beige
 desktop or a modern laptop?). Put everything in **one message**: the brief as you plan it, the 1–3 questions with your proposed default
 for each. If the request is clear, do not ask — say what you are building and build it. Never more than two rounds of questions in total.
 
@@ -99,7 +100,16 @@ Mixing scales (a minifig next to a micro building) is the most common way a set 
 
 **How big.** A set is 300–1,500 parts (the checker refuses under 150). Typical sizes: a house or shop scene 400–1,000 parts on a 24×24–32×32 base;
 a vehicle 200–500; an object model 300–800; a landmark 500–1,500. A small subject (a lighthouse, a food cart) gets a setting — ground, water,
-rocks, plants, a figure or two — not filler. A minifig-scale building is at least 10×8 studs and 2 storeys (or one storey + roof ≥ 30 plates).
+rocks, plants, a figure or two — not filler. A minifig-scale building is at least 10×8 studs and 2 storeys (or one storey + roof ≥ 30 plates). A space a minifigure stands in
+(a shop, a bus deck) needs ≥ 15 plates of headroom.
+
+**Living things** (people, pets, animals): use the moulded parts at minifig scale — `kit.minifig`, and the animals in `docs/PARTS.md`
+(cats 11602 / 13786p03, dog 26078p01, birds, fish, frog). "My cat on the sofa" is a cosy minifig-scale room with a cat on the sofa,
+not a brick sculpture of a cat. Sculpting a living thing from bricks is the hardest thing in LEGO design; don't, unless asked for a
+display-scale sculpture.
+
+**The level things stand on**: y is always the level of the top surface you put a part on — the base's top (`g`), or `g + 1` on a
+plate laid over it (paving, a rug's plate), `g + 3` on a brick.
 
 ## 4. Colour
 - 4–8 colours. One main colour (the subject's material), one or two secondary, one or two accents used sparingly (doors, signs, flowers).
@@ -142,7 +152,7 @@ export default m;
 | `new Model({ title, subtitle, budget: [min, max] })` | the set |
 | `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
 | `m.brick(size, x, y, z, color, rot)` · `m.plate(…)` · `m.tile(…)` | a plain part by its LEGO size; rot 0 = long side along x, rot 1 = along z |
-| `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'tile'` = finish the top with tiles (on a hollow box the lid is made solid underneath) |
+| `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'plate'` = a solid lid on a hollow box (needed for anything narrower built on top: a setback, a chimney); `top: 'tile'` = a solid lid finished with tiles |
 | `m.cut(x, y, z, w, d, h)` | removes the box() volume built so far in a region (openings, inlays): box first, then cut (kits cut their own openings) |
 | `m.section(tag, fn)` | groups parts (shown in check messages; `shots --only tag` renders just that section) |
 | `m.rigid(fn)` | parts that are one unit (as kits use); rarely needed |
@@ -177,10 +187,15 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.sign(m, { x, y, z, rot, text, color, brick })` | lettering on a wall: letter tiles (A–Z, 0–9, `. - @`) mounted sideways on side-stud bricks set into the wall course at y; runs to the right as seen from outside |
 | `kit.panel(m, { x, y, z, rot, w, rows, color, brick })` | a smooth tiled face on a wall (screens, fascias, display fronts): rows of 2-stud-tall tiles on side-stud bricks, one row every 5 plates |
 | `kit.sideRow(m, { x, y, z, rot, len, color })` | just the side-stud bricks (studs facing out) — returns the stud positions for your own mounting |
-| `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included) |
+| `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor, sit })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included). `sit: true` seats it on a 1×2 cushion plate at y (on a chair, sofa, bench or any studs), legs over the front edge |
+| `kit.chair(m, { x, y, z, rot, color })` · `kit.table(m, { x, y, z, color })` | a chair (returns its seat level, for a seated figure) and a round café table, each on 2×2 |
+| `kit.sofa(m, { x, y, z, w, rot, color })` · `kit.bookshelf(…)` · `kit.rug(…)` | living-room furniture; the sofa returns its seat level |
+| `kit.awning(m, { x, y, z, w, rot, colors, ledge })` | a striped awning: a plate ledge in the wall course at plate level y and slopes reaching out two studs |
 
 **Studs not on top (SNOT).** `kit.sign` and `kit.panel` mount tiles sideways on bricks with studs on their side — the way real sets
-put lettering, screens and smooth faces on walls. The side-stud bricks replace the wall course they sit in (the wall must be one stud thick there).
+put lettering, screens and smooth faces on walls. Rules: y must be the bottom of a brick course of the wall (y, y+3, …); the wall must be
+one stud thick there and continue at least one plate above the row (it holds the side-stud bricks down); the tiles stand one plate proud
+of the wall, so keep that strip in front clear. A sign is 1 stud tall per letter row; a panel row is 2 studs (5 plates) tall.
 
 ## 7. Checker messages and what they mean
 - **passes through** — two parts occupy the same space. Move one; or you placed a part *and* a box volume in the same cells (cut the box).

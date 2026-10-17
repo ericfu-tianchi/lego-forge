@@ -1,4 +1,4 @@
 PASS · 282 parts · 60 kinds · 7 build colours · 43% specialty parts · 0 errors · 1 warnings
 colours by share: Dark Bluish Gray 29% · White 24% · Green 10% · Light Bluish Gray 6% · Reddish Brown 6% · Black 4% · Yellow 4% · Dark Azure 3% · Bright Green 2% · Dark Green 2% · Bright Pink 2% · Tan 2%
-! 282 parts — under 400: likely too plain
-    → add the details that make the subject recognisable, or a setting around it
+! 282 parts — under 300: likely too plain (fine for a blockout)
+    → a set is 300–1,500 parts: build the subject bigger (more detail per feature) or give it a setting (ground, props, figures, a display stand)

@@ -15,7 +15,7 @@ export class Model {
   /** @param {{ title: string, subtitle?: string, budget?: [number, number], seed?: number }} meta */
   constructor(meta = {}) {
     this.meta = { title: 'Untitled set', subtitle: '', budget: [300, 2000], ...meta };
-    this.parts = []; this.vox = new Map(); this.cuts = []; this.owner = new Map(); this.warnings = []; this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
+    this.parts = []; this.vox = new Map(); this.cuts = []; this.owner = new Map(); this.warnings = []; this.deferred = []; this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
     this._src = null;
   }
   /** Mark everything placed inside fn with a tag (shown by the checker and usable in renders: --only <tag>). */
@@ -74,7 +74,10 @@ export class Model {
     const q = { id: def.id, color: c, free: { p, m }, tag: this.tag, group: this.groupId, line: callerLine() }; this.parts.push(q); return q;
   }
   /** Turn the box volumes into real parts (called by the CLI before checking). */
+  /** run fn when the build script has finished, just before packing (kits use it to place details only where volume is left) */
+  defer(fn) { this.deferred.push([fn, this.tag, this.groupId]); }
   pack() {
+    for (const [fn, tag, g] of this.deferred.splice(0)) { const t0 = this.tag, g0 = this.groupId; this.tag = tag; this.groupId = g; try { fn(); } finally { this.tag = t0; this.groupId = g0; } }
     if (!this.vox.size) return this;
     const layers = new Map(); for (const k of this.vox.keys()) { const [x, y, z] = k.split(',').map(Number); if (!layers.has(y)) layers.set(y, []); layers.get(y).push([x, z]); }
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);

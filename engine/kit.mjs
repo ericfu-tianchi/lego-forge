@@ -95,10 +95,18 @@ export const HAIR = { short: '3901', pigtails: '3625', bob: '4530', tousled: '62
   helmet: '3833', cap: '86035', cowboy: '3629', tophat: '3878', wizard: '6131', police: '3624', baseball: '93219' };
 /** A minifigure standing on two studs at x, z (its 2×1 footprint, or 1×2 when turned), y = the level it stands on.
  *  torso: a TORSOS key or a part id; shirt = the torso's main colour; face: FACES key; hair: HAIR key (hats too). */
-export function minifig(m, { x, y, z, rot = 0, torso = 'plain', shirt = 'Blue', legs = 'Dark Blue', arms, face = 'grin', hair = 'short', hairColor = 'Reddish Brown', skin = 'Yellow' }) {
+export function minifig(m, { x, y, z, rot = 0, torso = 'plain', shirt = 'Blue', legs = 'Dark Blue', arms, face = 'grin', hair = 'short', hairColor = 'Reddish Brown', skin = 'Yellow', sit = false, seat = 'Dark Bluish Gray' }) {
   let legsP; m.rigid(() => {
-    legsP = m.part('73200b-f1', x, y, z, legs, rot); if (!legsP) return;
-    const L = resolve(legsP); const at = (o) => { const w = mulv(L.m, o.p); return [L.origin[0] + w[0], L.origin[1] + w[1], L.origin[2] + w[2]]; }; const R = (o) => mul(L.m, o.m);
+    let L;
+    if (!sit) { legsP = m.part('73200b-f1', x, y, z, legs, rot); if (!legsP) return; L = resolve(legsP); }
+    else {   // seated: a 1×2 plate cushion on the seat's studs, the hips on the cushion, legs reaching forward over the front edge
+      const cushion = m.plate('1x2', x, y, z, seat, rot % 2); if (!cushion) return; legsP = cushion;
+      const c = resolve(cushion); const R0 = rotM(rot); const top = (y + 1) * PL;
+      const [cx, cz] = rot % 2 === 0 ? [x + 1, z + 0.5] : [x + 0.5, z + 1];
+      L = { origin: [cx, top + 0.6, cz], m: R0 };
+      m.free('73200b-f2', legs, L.origin, R0);
+    }
+    const at = (o) => { const w = mulv(L.m, o.p); return [L.origin[0] + w[0], L.origin[1] + w[1], L.origin[2] + w[2]]; }; const R = (o) => mul(L.m, o.m);
     const T = ld(0, -32, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1);                        // torso origin: 32 LDU above the hips
     const tor = TORSOS[torso] ?? torso; m.free(tor, shirt, at(T), R(T));
     const sub = (line) => { const o = ld(...line); return { p: [T.p[0] + o.p[0], T.p[1] + o.p[1], T.p[2] + o.p[2]], m: o.m }; };
@@ -110,6 +118,65 @@ export function minifig(m, { x, y, z, rot = 0, torso = 'plain', shirt = 'Blue', 
     if (hair) m.free(HAIR[hair] ?? hair, hairColor, at(H), R(H));
   });
   return legsP;
+}
+
+// ---- furniture -----------------------------------------------------------------------------------------------------------------
+/** A café table: round foot, round column, a round 2×2 top (tile). x, z = its 2×2 footprint. */
+export function table(m, { x, y, z, color = 'White', leg = 'Black', h = 5 }) {
+  m.rigid(() => { let t = y; m.part('4032a', x, t, z, leg); t += 1; m.part('87580', x, t, z, leg); t += 1; for (; t < y + h - 1; t += 3) m.part('3062b', x + 0.5, t, z + 0.5, leg);
+    m.part('4032a', x, t, z, color); t += 1; m.part('14769', x, t, z, color); });
+}
+/** A chair facing rot (0 = facing the front): a 2-plate-high seat on legs and a backrest; seat a figure on it with
+ *  kit.minifig({ sit: true, y: <the returned level>, x, z, rot }). x, z = its 2×2 footprint. Returns the seat's top level. */
+export function chair(m, { x, y, z, rot = 0, color = 'Reddish Brown' }) {
+  const back = [[0, 0], [1, 0], [0, 1], [0, 0]][rot], along = rot % 2 === 0;   // the backrest row is on the side away from where it faces
+  const bx = rot === 1 ? x : rot === 3 ? x + 1 : x, bz = rot === 0 ? z : rot === 2 ? z + 1 : z;
+  m.rigid(() => {
+    for (const [i, k] of [[0, 0], [1, 0], [0, 1], [1, 1]]) m.part('3062b', x + i, y, z + k, color);
+    m.plate('2x2', x, y + 3, z, color);
+    m.brick('1x2', bx, y + 4, bz, color, along ? 0 : 1); m.tile('1x2', bx, y + 7, bz, color, along ? 0 : 1);
+  });
+  return y + 4;
+}
+/** A sofa facing rot: dark feet, a seat block, a backrest along the back and arms at both ends. w = its length (≥ 4).
+ *  Returns the seat level. */
+export function sofa(m, { x, y, z, w = 6, rot = 0, color = 'Dark Blue', legs = 'Black' }) {
+  const along = rot % 2 === 0; const W = along ? w : 3, D = along ? 3 : w;
+  m.box(x, y, z, W, D, 1, legs, { kind: 'plate' });                                   // a dark plate as the feet
+  m.box(x, y + 1, z, W, D, 3, color);                                                 // the seat block
+  const backRow = { 0: [x, z, w, 1], 2: [x, z + 2, w, 1], 1: [x, z, 1, w], 3: [x + 2, z, 1, w] }[rot];
+  m.box(backRow[0], y + 4, backRow[1], backRow[2], backRow[3], 6, color, { top: 'tile' });   // backrest
+  const ends = along ? [[x, z], [x + w - 1, z]] : [[x, z], [x, z + w - 1]];
+  for (const [ex, ez] of ends) m.box(ex, y + 4, ez, along ? 1 : 3, along ? 3 : 1, 3, color, { top: 'tile' });   // arms
+  return y + 4;   // the seat level: seat figures here (kit.minifig({ sit: true, y: <this> })), the studs read as cushions
+}
+/** A bookshelf against a wall: a frame w wide × 1 deep, h bricks tall, with rows of books (1×1 bricks and plates in mixed colours). */
+export function bookshelf(m, { x, y, z, w = 4, h = 3, rot = 0, color = 'Reddish Brown', books = ['Red', 'Dark Blue', 'Dark Green', 'Tan', 'Dark Red', 'White'] }) {
+  const along = rot % 2 === 0;
+  for (let r = 0; r < h; r++) { const yy = y + r * 4;
+    m.box(x, yy, z, along ? w : 1, along ? 1 : w, 1, color, { kind: 'plate' });
+    for (let i = 0; i < w; i++) { const [bx, bz] = along ? [x + i, z] : [x, z + i]; if (i === 0 || i === w - 1) { m.brick('1x1', bx, yy + 1, bz, color); continue; }
+      m.part(m.rand() < 0.7 ? '3005' : '3062b', bx, yy + 1, bz, books[Math.floor(m.rand() * books.length)]); } }
+  m.box(x, y + h * 4, z, along ? w : 1, along ? 1 : w, 1, color, { kind: 'tile' });
+}
+/** A rug: smooth tiles with a border. */
+export function rug(m, { x, y, z, w, d, color = 'Dark Red', border = 'Tan' }) {
+  m.box(x, y, z, w, d, 1, border, { kind: 'tile' }); if (w > 2 && d > 2) { m.cut(x + 1, y, z + 1, w - 2, d - 2, 1); m.box(x + 1, y, z + 1, w - 2, d - 2, 1, color, { kind: 'tile' }); }
+}
+/** A striped awning over a door or window: a plate ledge one stud deep in the wall and two studs out, with 45° slopes in alternating
+ *  colours dropping away from the wall. x, y, z = the first wall cell of the run (y = the plate level of the ledge); w along the wall to
+ *  the right as seen from outside; rot = the side it faces. Build the wall first. */
+export function awning(m, { x, y, z, w, rot = 0, colors = ['White', 'Red'], ledge = 'White' }) {
+  const step = [[1, 0], [0, -1], [-1, 0], [0, 1]][rot], out = [[0, 1], [1, 0], [0, -1], [-1, 0]][rot];
+  const cells = Array.from({ length: w }, (_, i) => [x + step[0] * i, z + step[1] * i]);
+  const mx = Math.min(...cells.map((c) => c[0])), mz = Math.min(...cells.map((c) => c[1]));
+  for (const [cx, cz] of cells) m.cut(cx, y, cz, 1, 1, 1);
+  const along = rot % 2 === 0; const lx = out[0] < 0 ? mx - 2 : mx, lz = out[1] < 0 ? mz - 2 : mz;
+  m.rigid(() => {
+    m.box(lx, y, lz, along ? w : 3, along ? 3 : w, 1, ledge, { kind: 'plate', unit: 'awning' + x + z });
+    cells.forEach(([cx, cz], i) => { const sx = cx + out[0] * (out[0] < 0 ? 2 : 1), sz = cz + out[1] * (out[1] < 0 ? 2 : 1);
+      m.part('3040b', out[0] < 0 ? cx - 2 : out[0] > 0 ? cx + 1 : cx, y + 1, out[1] < 0 ? cz - 2 : out[1] > 0 ? cz + 1 : cz, colors[i % colors.length], rot); });
+  });
 }
 
 // ---- ground -------------------------------------------------------------------------------------------------------------------------
@@ -143,7 +210,8 @@ export function water(m, { x, y, z, w, d, color = 'Dark Azure', glint = 'Medium 
   const rnd = m.rand; const cells = [];
   for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) if (rnd() < glints) cells.push([x + i, z + k]);
   m.box(x, y, z, w, d, 1, color, { kind: 'tile' });
-  for (const [cx, cz] of cells) { m.cut(cx, y, cz, 1, 1, 1); m.part('98138', cx, y, cz, glint); }
+  // glints go in at the end, only where the water is still water (an island or a pier may be built over it later)
+  m.defer(() => { for (const [cx, cz] of cells) { const v = m.vox.get(`${cx},${y},${cz}`); if (!v || v.color !== color || v.kind !== 'tile') continue; m.vox.delete(`${cx},${y},${cz}`); m.part('98138', cx, y, cz, glint); } });
 }
 /** A rock outcrop over a rectangle, up to h plates (a multiple of 3) high: irregular terraces of bricks in two greys, the rims softened with
  *  small slopes. The outline is rounded by itself; give it a rectangle a little larger than the rock you want. Returns nothing. */

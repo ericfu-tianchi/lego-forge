@@ -13,6 +13,7 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 - **Texture**: log bricks (30136) for cabins, grille bricks (2877) for vents and shopfronts, headlight bricks (4070) for small square windows.
 - Never leave a wall wider than ~8 studs and taller than 2 bricks without anything on it.
 
+- **Awnings**: `kit.awning` — striped slopes reaching out from the wall over a shop window or door.
 - **Lettering and signs**: `kit.sign` — silver letters on coloured tiles mounted on the wall (a shop name, a number "8", "TACOS").
   Short words read best (2–8 letters); put the sign above the door or along the fascia.
 - **Smooth faces**: `kit.panel` — tiles mounted sideways (shop fascias, a screen on a monitor, the smooth front of an appliance).
@@ -46,6 +47,16 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 - `kit.wheels` gives an axle, two wheels and a mudguard; build the body from its top. Cars are 4–6 studs wide at minifig scale.
 - Windscreen 3823 (2×4×2), steering wheel 3829c01, seats 4079. Headlights: 1×1 round plates or tiles in Trans Clear / Trans Yellow on the front.
 
+## Interiors and furniture
+- `kit.sofa`, `kit.chair`, `kit.table`, `kit.bookshelf`, `kit.rug`; seat figures with `kit.minifig({ sit: true, y: <seat level> })`.
+- Show an interior by leaving the front open or by building only the back and one side wall (a "room box"), at minifig scale.
+- Pets: the moulded animals (cat 11602 or 13786p03, dog 26078p01) on a stud of a rug, a sofa seat or the floor.
+
+## Micro scale (cities, skylines)
+- Windows are 1×1 tiles, grille tiles (2412b) or headlight bricks (4070) — not window frames. Stack setbacks on solid lids (`box(…, { hollow: true, top: 'plate' })`).
+- Trees are 1×1 round plates or cones in green; people are left out. Bridges: arches (3659, 3455, 6108) on piers; water as tiles.
+- Each landmark keeps its one signature shape (the Empire State's setbacks and needle, the Flatiron's wedge with 6564/6565 wedges).
+
 ## Minifigures
 - `kit.minifig` with a printed torso and face (`kit.TORSOS`, `kit.FACES`, `kit.HAIR`). 1–3 per set, each doing something legible: at a door,
-  tending flowers, walking a dog (26078p01), sitting on a bench. Face the front (rot 0) or side-on; leave 1 stud clear around them.
+  tending flowers, walking a dog (26078p01), sitting at a café table (`sit: true` on a `kit.chair`), on a bench or a sofa. Face the front (rot 0) or side-on; leave 1 stud clear around them.

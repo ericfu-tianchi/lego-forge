@@ -6,8 +6,8 @@
   {
    "level": "warn",
    "part": null,
-   "msg": "282 parts — under 400: likely too plain",
-   "hint": "add the details that make the subject recognisable, or a setting around it",
+   "msg": "282 parts — under 300: likely too plain (fine for a blockout)",
+   "hint": "a set is 300–1,500 parts: build the subject bigger (more detail per feature) or give it a setting (ground, props, figures, a display stand)",
    "where": ""
   }
  ],
@@ -31,11 +31,11 @@
    "Dark Red 1%",
    "Trans Clear 1%",
    "Medium Lavender 1%",
-   "Medium Azure 0%",
    "Trans Yellow 0%",
    "Dark Blue 0%",
    "Dark Brown 0%",
-   "Sand Blue 0%"
+   "Sand Blue 0%",
+   "Medium Azure 0%"
   ],
   "specialShare": 0.43,
   "components": 1

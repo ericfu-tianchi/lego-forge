@@ -45,7 +45,11 @@ export function check(model) {
   // components
   const comp = new Array(parts.length).fill(-1); let n = 0; const sizes = [];
   for (let s = 0; s < parts.length; s++) { if (comp[s] >= 0) continue; const st = [s]; comp[s] = n; let c = 0; while (st.length) { const a = st.pop(); c++; for (const b of adj[a]) if (comp[b] < 0) { comp[b] = n; st.push(b); } } sizes.push(c); n++; }
-  const main = sizes.indexOf(Math.max(...sizes));
+  // the set is the largest piece that stands on the table (a vehicle parked on top of it is a separate piece by nature)
+  const isTyreP = (p) => /^Tyre/.test(partDef(p.id).name); const grounded = new Set(); const hasTyre = new Set();
+  parts.forEach((p, i) => { if (R[i].aabb[1] < 0.05) grounded.add(comp[i]); if (isTyreP(p)) hasTyre.add(comp[i]); });
+  let main = -1; for (let c = 0; c < n; c++) if (grounded.has(c) && !hasTyre.has(c) && (main < 0 || sizes[c] > sizes[main])) main = c;
+  if (main < 0) main = sizes.indexOf(Math.max(...sizes));
   const loose = new Map(); parts.forEach((p, i) => { if (comp[i] !== main) { if (!loose.has(comp[i])) loose.set(comp[i], []); loose.get(comp[i]).push(i); } });
   const isTyre = (p) => /^Tyre/.test(partDef(p.id).name);
   for (const list of loose.values()) {
@@ -61,8 +65,7 @@ export function check(model) {
   // ---- size and character
   const st = model.stats(); const [lo, hi] = model.meta.budget; { const cnt = new Map(); const body = parts.filter((p) => !/minifig|plant|animal/.test(partDef(p.id).cat) && !/^Trans/.test(p.color)); for (const p of body) cnt.set(p.color, (cnt.get(p.color) ?? 0) + 1); st.colors = [...cnt.values()].filter((n) => n >= Math.max(3, body.length * 0.03)).length; }   // colours that make up the build (≥ 3% of it), not every accent
   if (st.parts > hi) add('error', null, `${st.parts} parts — over the budget of ${hi}`, 'simplify: fewer filler bricks inside, larger plates under floors');
-  if (st.parts < 150) add('error', null, `${st.parts} parts — too small to be a set`, 'a set is 300–1,500 parts: build the subject bigger (more detail per feature) or give it a setting (ground, props, figures, a display stand)');
-  else if (st.parts < Math.max(lo, 300)) add('warn', null, `${st.parts} parts — under ${Math.max(lo, 300)}: likely too plain`, 'add the details that make the subject recognisable, or a setting around it');
+  if (st.parts < 300) add('warn', null, `${st.parts} parts — ${st.parts < 150 ? 'too small to be a set' : 'under 300: likely too plain'} (fine for a blockout)`, 'a set is 300–1,500 parts: build the subject bigger (more detail per feature) or give it a setting (ground, props, figures, a display stand)');
   const special = parts.filter((p) => !/^(brick|plate)$/.test(partDef(p.id).cat)).length / Math.max(1, parts.length);
   if (special < 0.25 && parts.length > 100) add('warn', null, `only ${(special * 100).toFixed(0)}% of the parts are not plain bricks/plates (good sets: 25–50%)`, 'use slopes, tiles, round parts, windows, plants and details: they are what make a set look designed');
   if (st.colors > 9) add('warn', null, `${st.colors} main colours (each ≥ 3% of the parts) — busy`, 'a strong set uses 4–8 colours');
