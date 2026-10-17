@@ -44,12 +44,12 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 22886 | Brick 1 x 2 x 3 without Understud | 2×1 · 9p | 2 studs |  |
 | 30136 | Brick 1 x 2 Log | 2×1 · 3p | 2 studs | log brick: cabins |
 | 30145 | Brick 2 x 2 x 3 | 2×2 · 9p | 4 studs |  |
-| 30414 | Brick 1 x 4 with Studs on Side | 4×1 · 3p | 4 studs · no anti-studs | studs on one side (decorative) |
+| 30414 | Brick 1 x 4 with Studs on Side | 4×1 · 3p | 4 studs | studs on one side (decorative) |
 | 47905 | Brick 1 x 1 with Studs on Two Opposite Sides | 1×1 · 3p | 1 studs |  |
 | 52107 | Brick 1 x 2 with Studs on Sides | 2×1 · 3p | 2 studs |  |
 | 85080 | Brick 2 x 2 Corner Round w Stud Notch and Reinforced Underside | 2×2 · 3p | 2 studs |  |
 | 87081 | Brick 4 x 4 Round with Pinhole and Snapstud | 4×4 · 3p | 12 studs |  |
-| 87087 | Brick 1 x 1 with Stud on 1 Side | 1×1 · 3p | 1 studs · no anti-studs | stud on one side (SNOT) — decorative here: its side stud is not used by the checker |
+| 87087 | Brick 1 x 1 with Stud on 1 Side | 1×1 · 3p | 1 studs | stud on one side (SNOT) — decorative here: its side stud is not used by the checker |
 | 92947 | Brick 2 x 2 Round with Grille | 2×2 · 3p | 4 studs |  |
 | 2453b | Brick 1 x 1 x 5 with Solid Stud | 1×1 · 15p | 1 studs |  |
 | 3062b | Brick 1 x 1 Round with Hollow Stud | 1×1 · 3p | 1 studs | round 1×1 brick: posts, trunks, lamp posts |

@@ -3,7 +3,7 @@
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath } from 'node:url';
 import { CATALOG } from '../engine/catalog.mjs'; import { COLORS } from '../engine/colors.mjs'; import { BRICK, PLATE, TILE } from '../engine/model.mjs';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const KIT_ONLY = /^(3818|3819|3820|973|973c01|973p\w+|3626\w+|73200b-f\d|30178c01|60601|60602|60603)$/;   // placed by kit functions
+const KIT_ONLY = /^(3818|3819|3820|973|973c01|973p\w+|3626\w+|73200b-f\d|30178c01|60601|60602|60603|3070bp[tuv]\w)$/;   // placed by kit functions
 const NOTES = {
   '3039': 'the classic roof slope', '3040b': 'roof slope, 1 wide', '3043': 'roof ridge (two faces)', '3044b': 'roof ridge, 1 wide', '3045': 'hip-roof outer corner', '3046': 'hip-roof inner corner',
   '3665a': 'inverted: overhangs, eaves, undersides', '3660': 'inverted 2×2', '54200': '"cheese" slope: tiny details, roof textures', '85984': 'low 1×2 slope: dashboards, roofs, keyboards',

@@ -219,3 +219,53 @@ export function island(m, { x, y, z, w, d, h = 9, sand = 'Tan', rock = ['Dark Bl
     m.box(X, y, Z, 1, 1, hh, c, { unit: `isl${i >> 1},${k >> 1}` });
   }
 }
+
+// ---- studs not on top (SNOT): tiles mounted on the side studs of bricks ----------------------------------------------------------
+const LETTERS = Object.fromEntries([...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map((c) => [c, '3070bpt' + c.toLowerCase()]).concat([...'012345678'].map((c) => [c, '3070bpv' + c]), [['9', '3070bpv6']], [['.', '3070bpuf'], ['-', '3070bpuh'], ['@', '3070bpuj']]));
+/** world position of side stud i of a placed part, and its direction */
+function sideStud(host, i) { const r = resolve(host); const d = partDef(host.id); const [x, z, y, dx, dz] = d.side[i]; const [a, b] = turn(x, z, host.rot); const [ex, ez] = turn(dx, dz, host.rot);
+  const [fw, fd] = footprint(d, host.rot); return { p: [host.x + fw / 2 + a, (host.y + y) * PL, host.z + fd / 2 + b], n: [ex, 0, ez] }; }
+/** mount a tile (or plate) flat against a side stud: its anti-stud cell (fx, fz) on the stud, its top facing out along n; `down` is the
+ *  tile's local +z on the wall (world −y), so its local x runs along the wall to the right as seen from outside */
+function mount(m, stud, id, color, fx = 0, fz = 0) {
+  const n = stud.n; const right = [n[2], 0, -n[0]];                      // seen from outside, "right" along the wall: n × up
+  const M = [right[0], n[0], 0, 0, 0, -1, right[2], n[2], 0];            // columns: local x → right, local y → n (out), local z → down
+  const d = partDef(id); const b = d.body; const bc = [(b[0] + b[3]) / 2 + fx, d.base ?? b[1], (b[2] + b[5]) / 2 + fz];
+  const w = mulv(M, bc); return m.free(id, color, [stud.p[0] - w[0], stud.p[1] - w[1], stud.p[2] - w[2]], M);
+}
+/** A row of side-stud bricks set into a wall (replacing it there): len cells starting at x, z, running to the right as seen from outside,
+ *  studs facing out on side `rot`. Returns the studs, left to right. */
+export function sideRow(m, { x, y, z, rot = 0, len, color = 'White' }) {
+  const step = [[1, 0], [0, -1], [-1, 0], [0, 1]][rot]; const studs = []; let i = 0;
+  while (i < len) {
+    const n = len - i >= 4 ? 4 : 1; const id = n === 4 ? '30414' : '87087';
+    const cells = Array.from({ length: n }, (_, k) => [x + step[0] * (i + k), z + step[1] * (i + k)]);
+    for (const [cx, cz] of cells) m.cut(cx, y, cz, 1, 1, 3);
+    const mx = Math.min(...cells.map((c) => c[0])), mz = Math.min(...cells.map((c) => c[1]));
+    const host = m.part(id, mx, y, mz, color, rot); if (host) { const list = partDef(id).side.map((_, k) => sideStud(host, k)); list.sort((a, b) => (a.p[0] - b.p[0]) * step[0] + (a.p[2] - b.p[2]) * step[1]); studs.push(...list); }
+    i += n;
+  }
+  return studs;
+}
+/** A sign: letter tiles (silver letters A–Z, 0–9, . - @ on tiles of `color`) on a row of side-stud bricks set into a wall.
+ *  x, y, z = the first cell of the row inside the wall (y = a brick course); rot = the side it faces (0 front … 3 left); the row runs to
+ *  the right as seen from outside. Spaces are plain tiles. The wall there must be 1 stud thick. */
+export function sign(m, { x, y, z, rot = 0, text, color = 'Black', brick = 'White' }) {
+  const chars = [...String(text).toUpperCase()];
+  m.rigid(() => { const studs = sideRow(m, { x, y, z, rot, len: chars.length, color: brick }); chars.forEach((ch, i) => { if (studs[i]) mount(m, studs[i], LETTERS[ch] ?? '3070b', color); }); });
+}
+/** A smooth panel on a wall: rows of 2-stud-tall tiles mounted on side-stud bricks — a screen, a shopfront fascia, a smooth facade.
+ *  x, y, z = the first cell (inside the wall) of the lowest row; w cells wide to the right as seen from outside; rows panels stacked
+ *  every 5 plates (each row covers 2 studs = 5 plates). Build the wall with box() first; the panel replaces the side-stud course.
+ *  The tiles stand 1 plate proud of the wall face. */
+export function panel(m, { x, y, z, rot = 0, w, rows = 1, color = 'Black', brick = 'White' }) {
+  m.rigid(() => {
+    for (let r = 0; r < rows; r++) {
+      const studs = sideRow(m, { x, y: y + 5 * r, z, rot, len: w, color: brick }); let i = 0;
+      while (i < w) { const n = w - i >= 4 ? 4 : w - i >= 3 ? 3 : w - i >= 2 ? 2 : 1; const id = { 4: '87079', 3: '26603', 2: '3068b', 1: '3069b' }[n];
+        if (n === 1) mount(m, studs[i], id, color, 0, 0.5);   // a 1×2 tile stood up: its lower cell on the stud
+        else mount(m, studs[i], id, color, -n / 2 + 0.5, 0.5);
+        i += n; }
+    }
+  });
+}

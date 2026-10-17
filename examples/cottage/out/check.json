@@ -6,18 +6,18 @@
   {
    "level": "warn",
    "part": null,
-   "msg": "283 parts — under 400: likely too plain",
+   "msg": "282 parts — under 400: likely too plain",
    "hint": "add the details that make the subject recognisable, or a setting around it",
    "where": ""
   }
  ],
  "stats": {
-  "parts": 283,
-  "types": 59,
+  "parts": 282,
+  "types": 60,
   "colors": 7,
   "palette": [
    "Dark Bluish Gray 29%",
-   "White 25%",
+   "White 24%",
    "Green 10%",
    "Light Bluish Gray 6%",
    "Reddish Brown 6%",

@@ -13,6 +13,10 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 - **Texture**: log bricks (30136) for cabins, grille bricks (2877) for vents and shopfronts, headlight bricks (4070) for small square windows.
 - Never leave a wall wider than ~8 studs and taller than 2 bricks without anything on it.
 
+- **Lettering and signs**: `kit.sign` — silver letters on coloured tiles mounted on the wall (a shop name, a number "8", "TACOS").
+  Short words read best (2–8 letters); put the sign above the door or along the fascia.
+- **Smooth faces**: `kit.panel` — tiles mounted sideways (shop fascias, a screen on a monitor, the smooth front of an appliance).
+
 ## Roofs
 - `kit.roof` for pitched roofs (45°), with `overhang: 1` when there is a slab under the eaves one stud wider than the walls.
 - Roof colours: Dark Bluish Gray (slate), Reddish Brown / Dark Orange (tiles), Dark Red. Gable ends in the wall colour.
@@ -31,6 +35,7 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 
 ## Objects at display scale (a computer, a radio, a coffee machine)
 - The object stands on its own bottom or on a low **display stand** (a 2-plate base in a dark colour, edged with tiles).
+- **Smooth fronts**: `kit.panel` for a screen or a smooth front face; `kit.sign` for a brand word or a model number.
 - **Smooth top surfaces**: finish the visible top faces with tiles (`box(…, { top: 'tile' })` on the top course); studs on a product's top look unfinished.
 - **Panel lines and details**: grille tiles (2412b) for vents and speakers, 1×1 round tiles (98138) for buttons and knobs, 1×2 jumper plates for
   centred single details, tiles in a contrasting colour for screens and labels.

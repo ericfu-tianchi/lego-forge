@@ -1,12 +1,12 @@
 part,name,colour,quantity
 3039,"Slope Brick 45 2 x 2",Dark Bluish Gray,40
-3004,"Brick 1 x 2",White,19
+3004,"Brick 1 x 2",White,17
 41539,"Plate 8 x 8",Dark Bluish Gray,12
 3003,"Brick 2 x 2",Dark Bluish Gray,11
 3035,"Plate 4 x 8",Green,10
 3009,"Brick 1 x 6",White,9
-3005,"Brick 1 x 1",White,9
 3005,"Brick 1 x 1",Light Bluish Gray,8
+3005,"Brick 1 x 1",White,8
 3043,"Slope Brick 45 2 x 2 Double",Dark Bluish Gray,6
 24866,"Plate 1 x 1 with 5 Petals",Bright Pink,6
 98138,"Tile 1 x 1 Round with Groove",Light Bluish Gray,6
@@ -20,6 +20,7 @@ part,name,colour,quantity
 24866,"Plate 1 x 1 with 5 Petals",Yellow,4
 3820,"Minifig Hand",Yellow,4
 3031,"Plate 4 x 4",Green,4
+3622,"Brick 1 x 3",White,4
 3003,"Brick 2 x 2",White,4
 3022,"Plate 2 x 2",Light Bluish Gray,3
 6141,"Plate 1 x 1 Round",Green,3
@@ -28,7 +29,7 @@ part,name,colour,quantity
 2417,"Plant Leaves 6 x 5",Green,3
 2417,"Plant Leaves 6 x 5",Bright Green,3
 98138,"Tile 1 x 1 Round with Groove",Bright Green,3
-3622,"Brick 1 x 3",White,3
+3004,"Brick 1 x 2",Dark Bluish Gray,3
 3006,"Brick 2 x 10",White,3
 60593,"Window 1 x 2 x 3 without Sill",Dark Green,2
 60602,"Glass for Window 1 x 2 x 3",Trans Clear,2
@@ -37,13 +38,12 @@ part,name,colour,quantity
 6064b,"Plant Bush",Green,2
 6141,"Plate 1 x 1 Round",Black,2
 3009,"Brick 1 x 6",Dark Bluish Gray,2
-3010,"Brick 1 x 4",Dark Bluish Gray,2
-3005,"Brick 1 x 1",Dark Bluish Gray,2
+3622,"Brick 1 x 3",Dark Bluish Gray,2
 3020,"Plate 2 x 4",Reddish Brown,2
 87079,"Tile 2 x 4",Dark Azure,2
 3069b,"Tile 1 x 2 with Groove",Dark Azure,2
 26603,"Tile 2 x 3",Dark Azure,2
-6112,"Brick 1 x 12",White,2
+3010,"Brick 1 x 4",White,2
 30179,"Door 1 x 4 x 6 Frame Type 1",White,1
 30178c01,"Door 1 x 4 x 6 with 3 Panes with TransClear Glass",Dark Red,1
 60592,"Window 1 x 2 x 2 without Sill",Dark Green,1
@@ -73,11 +73,11 @@ part,name,colour,quantity
 86035,"Minifig Cap with Short Arched Peak",Dark Green,1
 26078p01,"Animal Dog Terrier with Black Eyes and Nose and Light Bluish Grey Fur Lines Pattern",White,1
 6112,"Brick 1 x 12",Dark Bluish Gray,1
-3004,"Brick 1 x 2",Dark Bluish Gray,1
 4162,"Tile 1 x 8",Dark Azure,1
 63864,"Tile 1 x 3",Dark Azure,1
 3070b,"Tile 1 x 1 with Groove",Dark Azure,1
-3010,"Brick 1 x 4",White,1
+6111,"Brick 1 x 10",White,1
+6112,"Brick 1 x 12",White,1
 3028,"Plate 6 x 12",Reddish Brown,1
 3034,"Plate 2 x 8",Reddish Brown,1
 2445,"Plate 2 x 12",Reddish Brown,1

@@ -174,7 +174,13 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.island(m, { x, y, z, w, d, h, sand, rock, plateau: { x, z, w, d }, plateauY })` | an island or hill: irregular outline, sand rim, rock relief, a flat terrace to build on. Lay `kit.water` first, then the island over it (later volumes replace earlier ones) |
 | `kit.palm(m, { x, y, z, h })` | a palm tree on one stud |
 | `kit.parasol(m, { x, y, z, canopy })` | a beach parasol on a 2×2 foot |
+| `kit.sign(m, { x, y, z, rot, text, color, brick })` | lettering on a wall: letter tiles (A–Z, 0–9, `. - @`) mounted sideways on side-stud bricks set into the wall course at y; runs to the right as seen from outside |
+| `kit.panel(m, { x, y, z, rot, w, rows, color, brick })` | a smooth tiled face on a wall (screens, fascias, display fronts): rows of 2-stud-tall tiles on side-stud bricks, one row every 5 plates |
+| `kit.sideRow(m, { x, y, z, rot, len, color })` | just the side-stud bricks (studs facing out) — returns the stud positions for your own mounting |
 | `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included) |
+
+**Studs not on top (SNOT).** `kit.sign` and `kit.panel` mount tiles sideways on bricks with studs on their side — the way real sets
+put lettering, screens and smooth faces on walls. The side-stud bricks replace the wall course they sit in (the wall must be one stud thick there).
 
 ## 7. Checker messages and what they mean
 - **passes through** — two parts occupy the same space. Move one; or you placed a part *and* a box volume in the same cells (cut the box).

@@ -142,12 +142,17 @@ for (let id of ids) {
   const topStud = up.length ? Math.max(...up.map((u) => u.at[1])) : -Infinity;
   const top = up.length && Math.abs(bb.max.y - (topStud + STUD_H)) < 0.08 ? topStud : bb.max.y;   // the body ends where the top studs begin
   const body = [bb.min.x, bb.min.y, bb.min.z, bb.max.x, Math.max(top, bb.min.y + 0.01), bb.max.z];
+  for (const s of studs0) { if (Math.abs(s.dir[1]) > 0.1) continue;   // side studs stick out of the body: the body ends at their base
+    if (s.dir[0] > 0.9) body[3] = Math.min(body[3], s.at[0]); if (s.dir[0] < -0.9) body[0] = Math.max(body[0], s.at[0]);
+    if (s.dir[2] > 0.9) body[5] = Math.min(body[5], s.at[2]); if (s.dir[2] < -0.9) body[2] = Math.max(body[2], s.at[2]); }
   const cx = (body[0] + body[3]) / 2, cz = (body[2] + body[5]) / 2;
   // the connection plane: whole plates below the top studs (a wheel-holder's pins or a hanging detail reach below it)
   let y0 = body[1]; if (up.length) { const k = (topStud - bb.min.y) / PL; if (Math.abs(k - Math.round(k)) > 0.05) y0 = topStud - Math.max(1, Math.round(k)) * PL; }
   body[1] = Math.min(body[1], y0);
   const W = Math.max(1, Math.round(body[3] - body[0] - 0.1)), D = Math.max(1, Math.round(body[5] - body[2] - 0.1)), H = (body[4] - y0) / PL;
   const studs = up.map((s) => [+(s.at[0] - cx).toFixed(3), +(s.at[2] - cz).toFixed(3), +((s.at[1] - y0) / PL).toFixed(2)]);
+  // studs pointing sideways (SNOT): [x, z, y (plates), dx, dz] — where kits can mount tiles and plates on their side
+  const side = studs0.filter((s) => Math.abs(s.dir[1]) < 0.1).map((s) => [+(s.at[0] - cx).toFixed(3), +(s.at[2] - cz).toFixed(3), +((s.at[1] - y0) / PL).toFixed(2), Math.round(s.dir[0]), Math.round(s.dir[2])]);
   const cols = [], female = [];
   for (let i = 0; i < W; i++) for (let j = 0; j < D; j++) {
     const x = -W / 2 + i + 0.5, z = -D / 2 + j + 0.5, X = cx + x, Z = cz + z;
@@ -166,7 +171,7 @@ for (let id of ids) {
   if (!female.length) for (const t of res.tubes) { const p = [t[0] / 20, -t[1] / 20, -t[2] / 20]; if (Math.abs(p[1] - y0) < 0.35) female.push([+(p[0] - cx).toFixed(3), +(p[2] - cz).toFixed(3)]); }
   if (!female.length && /^Animal/.test(res.header.replace(/^[~=_|]+/, '')) && cols.some((c) => c[2] < 0.1)) { const c = cols.reduce((a, b) => (Math.hypot(a[0], a[1]) <= Math.hypot(b[0], b[1]) ? a : b)); female.push([c[0], c[1]]); }
   const name = res.header.replace(/^[~=_|]+/, '').replace(/\s+/g, ' ');
-  catalog[id] = { id, name, cat: category(name), w: W, d: D, h: +H.toFixed(2), body: body.map((v) => +v.toFixed(4)), base: +y0.toFixed(4), studs, female, cols, deco: deco.length > 0 || glass.length > 0, ...(res.certified ? {} : { ds: true }) };
+  catalog[id] = { id, name, cat: category(name), w: W, d: D, h: +H.toFixed(2), body: body.map((v) => +v.toFixed(4)), base: +y0.toFixed(4), studs, female, cols, ...(side.length ? { side } : {}), deco: deco.length > 0 || glass.length > 0, ...(res.certified ? {} : { ds: true }) };
   fs.writeFileSync(path.join(GEO, id + '.json'), JSON.stringify({ main: main.length ? meshOf(main, false) : null, deco: deco.length ? meshOf(deco, true) : null, glass: glass.length ? meshOf(glass, true) : null }));
   done++; console.log(`✓ ${id} ${name} · ${W}×${D}×${H.toFixed(2)}p · ${studs.length} studs · ${female.length} anti-studs${deco.length ? ' · printed' : ''}${res.certified ? '' : ' · not BFC'}`);
 }

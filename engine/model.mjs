@@ -15,7 +15,7 @@ export class Model {
   /** @param {{ title: string, subtitle?: string, budget?: [number, number], seed?: number }} meta */
   constructor(meta = {}) {
     this.meta = { title: 'Untitled set', subtitle: '', budget: [300, 2000], ...meta };
-    this.parts = []; this.vox = new Map(); this.cuts = []; this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
+    this.parts = []; this.vox = new Map(); this.cuts = []; this.owner = new Map(); this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
     this._src = null;
   }
   /** Mark everything placed inside fn with a tag (shown by the checker and usable in renders: --only <tag>). */
@@ -47,7 +47,14 @@ export class Model {
       // hollow: walls one stud thick; with a top, the top layer (two layers under a tile finish) is solid so the lid holds together
       if (opts.hollow && inside && !(capped && j >= h - (opts.top === 'tile' ? 2 : 1))) continue;
       const top = j === h - 1 && opts.top === 'tile';
-      this.vox.set(`${x + i},${y + j},${z + k}`, { color: colorName(color) ?? color, kind: top ? 'tile' : kind, tag: this.tag, group: this.groupId, unit: opts.unit });
+      // hollow walls: each wall is its own run, and the corners change hands course by course so the walls interlock
+      let unit = opts.unit;
+      if (opts.hollow && !inside && !(capped && j >= h - (opts.top === 'tile' ? 2 : 1))) {
+        const course = kind === 'brick' ? Math.floor(j / 3) : j; const fb = k === 0 || k === d - 1, lr = i === 0 || i === w - 1;
+        const side = fb && lr ? (course % 2 ? (i === 0 ? 'L' : 'R') : (k === 0 ? 'B' : 'F')) : fb ? (k === 0 ? 'B' : 'F') : (i === 0 ? 'L' : 'R');
+        unit = `${opts.unit ?? ''}wall${x},${z}:${side}`;
+      }
+      this.vox.set(`${x + i},${y + j},${z + k}`, { color: colorName(color) ?? color, kind: top ? 'tile' : kind, tag: this.tag, group: this.groupId, unit });
     }
     return this;
   }
@@ -70,10 +77,16 @@ export class Model {
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);
     const K = (x, y, z) => `${x},${y},${z}`;
     for (const y of ys) {
-      const cells = layers.get(y); cells.sort((a, b) => a[1] - b[1] || a[0] - b[0]);
+      const cells = layers.get(y);
       const flipB = Math.floor(y / 3) % 2 === 1, flipP = y % 2 === 1;   // alternate courses: bricks every 3 plates, plates every plate
+      // every other course walks the cells column by column, so the runs along z take the corners there and the walls interlock
+      const flip = this.vox.get(`${cells[0][0]},${y},${cells[0][1]}`)?.kind === 'brick' ? flipB : flipP;
+      cells.sort((a, b) => (flip ? a[0] - b[0] || a[1] - b[1] : a[1] - b[1] || a[0] - b[0]));
       const brickAt = (x, z) => { const v = this.vox.get(K(x, y, z)); if (!v || v.kind !== 'brick' || used.has(K(x, y, z))) return null;
         for (let dy = 1; dy < 3; dy++) { const u = this.vox.get(K(x, y + dy, z)); if (!u || u.kind !== 'brick' || u.color !== v.color || u.group !== v.group || used.has(K(x, y + dy, z))) return null; } return v; };
+      // straight one-stud-wide runs (walls, edges): split them so no joint sits over a joint of the course below, and no run ends in a
+      // single-stud piece — the course then holds the course below together
+      this.packRuns(y, cells, brickAt, used, K);
       for (const [x, z] of cells) { const v = brickAt(x, z); if (!v) continue;
         const [w, d] = this.bestRect(x, z, (cx, cz) => { const u = brickAt(cx, cz); return !!u && u.color === v.color && u.tag === v.tag && u.group === v.group && u.unit === v.unit; }, BRICK, flipB, (cx, cz) => { const u = this.vox.get(K(cx, y, cz)); return !!u && u.kind === 'brick' && u.color === v.color && u.unit === v.unit; });
         for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let dy = 0; dy < 3; dy++) used.add(K(x + i, y + dy, z + k));
@@ -85,6 +98,36 @@ export class Model {
         this.emit(kind, x, y, z, w, d, v); }
     }
     this.vox.clear(); return this;
+  }
+  packRuns(y, cells, brickAt, used, K) {
+    const props = (v) => `${v.color}|${v.tag}|${v.group}|${v.unit}`;
+    for (const mode of ['brick', 'plate']) {
+      const can = (x, z) => { if (used.has(K(x, y, z))) return null; const v = this.vox.get(K(x, y, z)); if (!v) return null;
+        if (mode === 'brick') return brickAt(x, z); return v.kind === 'brick' && brickAt(x, z) ? null : v; };
+      const seen = new Set();
+      for (const [x0, z0] of cells) {
+        const v0 = can(x0, z0); if (!v0 || seen.has(`${x0},${z0}`)) continue;
+        // the connected region of identical cells
+        const comp = []; const st = [[x0, z0]]; seen.add(`${x0},${z0}`);
+        while (st.length) { const [x, z] = st.pop(); comp.push([x, z]); for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { const k = `${x + dx},${z + dz}`; if (seen.has(k)) continue; const u = can(x + dx, z + dz); if (u && props(u) === props(v0) && (mode === 'brick' || (u.kind === 'tile') === (v0.kind === 'tile'))) { seen.add(k); st.push([x + dx, z + dz]); } } }
+        const alongX = comp.every(([, z]) => z === comp[0][1]), alongZ = comp.every(([x]) => x === comp[0][0]);
+        if (comp.length < 2 || !(alongX || alongZ)) continue;
+        const kind = mode === 'brick' ? 'brick' : v0.kind === 'tile' ? 'tile' : 'plate'; const table = kind === 'brick' ? BRICK : kind === 'tile' ? TILE : PLATE;
+        const lens = Object.keys(table).map((k) => k.split('x').map(Number)).filter(([a]) => a === 1).map(([, b]) => b).concat([1]).filter((v, i, a) => a.indexOf(v) === i);
+        const a0 = alongX ? Math.min(...comp.map((c) => c[0])) : Math.min(...comp.map((c) => c[1])); const L = comp.length; const fixed = alongX ? comp[0][1] : comp[0][0];
+        const at = (p) => (alongX ? [a0 + p, fixed] : [fixed, a0 + p]);
+        const below = y - (kind === 'brick' ? 1 : 1); const bad = new Set();
+        for (let p = 1; p < L; p++) { const [ax, az] = at(p - 1), [bx, bz] = at(p); const o1 = this.owner.get(K(ax, below, az)), o2 = this.owner.get(K(bx, below, bz)); if (o1 !== undefined && o2 !== undefined && o1 !== o2) bad.add(p); }
+        // dynamic programme: fewest joints over a joint below, then no single-stud end pieces, then fewest pieces
+        const cost = (p, len) => (bad.has(p) && p !== L ? 100 : 0) + ((len === 1 && L >= 3) ? 10 : 0) + 1;
+        const best = new Array(L + 1).fill(Infinity), prev = new Array(L + 1).fill(-1); best[0] = 0;
+        for (let p = 0; p < L; p++) if (best[p] < Infinity) for (const len of lens) { const q = p + len; if (q > L) continue; const c = best[p] + cost(q, len); if (c < best[q]) { best[q] = c; prev[q] = p; } }
+        const cuts = []; for (let q = L; q > 0; q = prev[q]) cuts.unshift([prev[q], q - prev[q]]);
+        for (const [p, len] of cuts) { const [x, z] = at(p); const [w, d] = alongX ? [len, 1] : [1, len];
+          for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let dy = 0; dy < (kind === 'brick' ? 3 : 1); dy++) used.add(K(x + i, y + dy, z + k));
+          this.emit(kind, x, y, z, w, d, v0); }
+      }
+    }
   }
   bestRect(x, z, ok, table, flip, inRun = ok) {
     const fits = [];
@@ -104,6 +147,7 @@ export class Model {
   emit(kind, x, y, z, w, d, v) {
     const key = w <= d ? `${w}x${d}` : `${d}x${w}`; const id = SIZES[kind][key]; const def = partDef(id);
     this.parts.push({ id, x, y, z, rot: def.w === w ? 0 : 1, color: v.color, tag: v.tag, group: v.group, line: 'box()' });
+    const idx = this.parts.length - 1; const hh = kind === 'brick' ? 3 : 1; for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let dy = 0; dy < hh; dy++) this.owner.set(`${x + i},${y + dy},${z + k}`, idx);
   }
   stats() { const ids = new Set(), colors = new Set(); for (const p of this.parts) { ids.add(p.id); colors.add(p.color); } return { parts: this.parts.length, types: ids.size, colors: colors.size }; }
 }
