@@ -87,7 +87,7 @@ if (SET.meta.view) VIEWS.hero = [THREE.MathUtils.degToRad(SET.meta.view[0]), THR
 let heroK = 1;
 if (SET.meta.focus && !ONLY && !SHEET) { const fb = new THREE.Box3(), tmp = new THREE.Box3(), M = new THREE.Matrix4();
   for (const it of items) { if (SET.inst[it.i][15] !== SET.meta.focus) continue; const g = GEO[it.id].main ?? GEO[it.id].deco ?? GEO[it.id].glass; M.compose(it.home.pos, it.home.quat, new THREE.Vector3(1, 1, 1)); tmp.copy(g.boundingBox).applyMatrix4(M); fb.union(tmp); }
-  if (!fb.isEmpty()) { const c = fb.getCenter(new THREE.Vector3()); target.lerp(c, 0.6); heroK = Math.max(0.45, Math.min(1, (fb.getSize(new THREE.Vector3()).length() / 2) / radius * 1.6)); } }
+  if (!fb.isEmpty()) { const c = fb.getCenter(new THREE.Vector3()); target.lerp(c, 0.35); heroK = Math.max(0.78, Math.min(1, (fb.getSize(new THREE.Vector3()).length() / 2) / radius * 2.2)); } }
 const [az0, el0] = VIEWS[Q.get('view') ?? 'hero'] ?? VIEWS.hero; place(camera, az0, el0, camera.aspect, Q.get('view') && Q.get('view') !== 'hero' ? 1 : heroK); controls.target.copy(target); controls.update();
 
 // ---- take apart / rebuild ----------------------------------------------------------------------------------------------------

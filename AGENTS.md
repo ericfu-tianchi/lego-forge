@@ -7,9 +7,13 @@ plus `model.ldr` (opens in BrickLink Studio) and `parts.csv`.
 **The bar is a set someone would be proud to put on a shelf**, not a pile of bricks that passes a test: the subject is recognisable at a
 glance, the proportions are right, it looks designed. Target **300–1,500 parts** (hard limit 2,000).
 
-Read this file once, completely, before you start. Then read `docs/TECHNIQUES.md` and the worked examples — `examples/cottage/`
-(a minifig-scale scene) and `examples/retro-computer/` (a display-scale object): read each `build.mjs` and look at its `out/hero.png`. The parts list is `docs/PARTS.md` (pictures of every part:
-`docs/gallery/<category>.png`), colours `docs/COLORS.md`, the review rubric `docs/RUBRIC.md`.
+**What to read** (keep your context for the build):
+1. This file, completely.
+2. `docs/RUBRIC.md` (short) and the sections of `docs/TECHNIQUES.md` that fit your subject.
+3. **One** worked example for your scale — `examples/cottage/` (a minifig-scale scene) or `examples/retro-computer/` (a display-scale
+   object): its `build.mjs` and `out/hero.png`.
+4. Parts: **don't read `docs/PARTS.md` whole** — search it: `node bin/lego.mjs parts <words>`, and `node bin/lego.mjs part <id>` for one
+   part's studs. Colours: `docs/COLORS.md`. Pictures of parts: `docs/gallery/<category>.png` (only if you need to see a shape).
 
 ---
 
@@ -49,8 +53,9 @@ In `build.mjs`, build the big masses only, as plain `m.box(...)` volumes at the 
 puts the reference beside the render (`out/compare.png`).
 
 ### Step 3 · Detail
-Turn the blocks into a model. **Buildings: start from `kit.building`** (it gives a correct, detailed structure in one call), then make it
-yours — the details that make *this* building recognisable, its colours, figures and setting. Otherwise: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
+Turn the blocks into a model. **Start from the most complete kit that fits** — buildings `kit.building`, road vehicles `kit.vehicle`,
+appliances and boxy objects `kit.casing`, furniture, plants, figures — they give a correct, detailed structure in one call. Then make it
+yours: the details that make *this* subject recognisable, its colours, figures and setting. Otherwise: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
 texture and life (§5). Use `docs/PARTS.md` and `node bin/lego.mjs parts <words>` to find parts. Build in sections (`m.section('tower', () => …)`).
 
 ### Step 4 · Check — must PASS
@@ -98,6 +103,9 @@ opens in BrickLink Studio for building instructions and part ordering.
   built (often 1:2–1:1 of the real thing for small objects). Every detail is built from parts; nothing is "implied".
 - **Micro scale** (a whole city block, a ship): 1 stud ≈ 1–2 m; windows become tiles and grilles, people are left out.
 Mixing scales (a minifig next to a micro building) is the most common way a set looks wrong.
+
+**Display scale, how big**: 1 stud = 8 mm. A countertop object (espresso machine, radio) at 1:1–1:2 is 16–30 studs wide; make it
+big enough that each signature detail is at least 2 studs across (a 1-stud knob is fine; a 1-stud portafilter is not).
 
 **How big.** A set is 300–1,500 parts (the checker refuses under 150). Typical sizes: a house or shop scene 400–1,000 parts on a 24×24–32×32 base;
 a vehicle 200–500; an object model 300–800; a landmark 500–1,500. A small subject (a lighthouse, a food cart) gets a setting — ground, water,
@@ -192,8 +200,9 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.sideRow(m, { x, y, z, rot, len, color })` | just the side-stud bricks (studs facing out) — returns the stud positions for your own mounting |
 | `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor, sit })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included). `sit: true` seats it on a 1×2 cushion plate at y, legs over the front edge |
 | `kit.chair(…)` · `kit.bench(…)` · `kit.sofa(…).seats[i]` · `kit.vehicle(…).cabSeat` | each returns a seat: `kit.minifig(m, { ...seat, torso: 'jacket', … })` puts a figure on it, correctly placed |
-| `kit.table(m, { x, y, z, color })` · `kit.bookshelf(…)` · `kit.rug(…)` | a round café table on 2×2, a bookshelf, a rug |
-| `kit.vehicle(m, { x, y, z, len, kind: 'car'∣'van'∣'truck'∣'bus', color, accent, glass })` | **a finished road vehicle**, 4 wide, front at +z: wheels, chassis, headlights, grille, tail lights, windscreen, cab or body. Start every vehicle from this, then customise. Returns `{ cabSeat, bed }`; it stands loose on its wheels |
+| `kit.table(m, { x, y, z, color, studs })` · `kit.bookshelf(…)` · `kit.rug(…)` | a round café table on 2×2 (returns its top level; `studs: true` to put a cup or a cake on it), a bookshelf, a rug |
+| `kit.casing(m, { x, y, z, w, d, h, color, trim, panel: { color, rows, from }, buttons: [colours] })` | **a display-scale appliance body** (espresso machine, radio, console…): feet, hollow body, rounded front top edge, a tiled screen/fascia, buttons. Start objects from this, then add what makes yours recognisable (a portafilter, a dial, a handle) |
+| `kit.vehicle(m, { x, y, z, len, kind: 'car'∣'van'∣'truck'∣'fire'∣'bus', color, accent, glass })` | **a finished road vehicle**, 4 wide, front at +z: wheels, chassis, headlights, grille, tail lights, windscreen, cab or body. Start every vehicle from this, then customise. Returns `{ cabSeat, bed }`; it stands loose on its wheels |
 | `kit.snowman(m, { x, y, z, hat, scarf })` | a snowman on 2×2 |
 | `kit.awning(m, { x, y, z, w, rot, colors, ledge })` | a striped awning: a plate ledge in the wall course at plate level y and slopes reaching out two studs |
 

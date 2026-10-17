@@ -123,10 +123,12 @@ export function minifig(m, { x, y, z, rot = 0, torso = 'plain', shirt = 'Blue', 
 }
 
 // ---- furniture -----------------------------------------------------------------------------------------------------------------
-/** A café table: round foot, round column, a round 2×2 top (tile). x, z = its 2×2 footprint. */
-export function table(m, { x, y, z, color = 'White', leg = 'Black', h = 5 }) {
-  m.rigid(() => { let t = y; m.part('4032a', x, t, z, leg); t += 1; m.part('87580', x, t, z, leg); t += 1; for (; t < y + h - 1; t += 3) m.part('3062b', x + 0.5, t, z + 0.5, leg);
-    m.part('4032a', x, t, z, color); t += 1; m.part('14769', x, t, z, color); });
+/** A café table: round foot, round column, a round 2×2 top — a smooth tile, or with studs: true its 4 studs to put things on.
+ *  x, z = its 2×2 footprint. Returns the level of the top. */
+export function table(m, { x, y, z, color = 'White', leg = 'Black', h = 5, studs = false }) {
+  let top; m.rigid(() => { let t = y; m.part('4032a', x, t, z, leg); t += 1; m.part('87580', x, t, z, leg); t += 1; for (; t < y + h - 1; t += 3) m.part('3062b', x + 0.5, t, z + 0.5, leg);
+    m.part('4032a', x, t, z, color); t += 1; if (!studs) m.part('14769', x, t, z, color); top = t; });
+  return top;   // with studs: true the top keeps its studs: put a cup, a plant or a cake on it at this level
 }
 /** A chair facing rot (0 = facing the front): a seat on four round legs and a backrest. x, z = its 2×2 footprint.
  *  Returns the seat for a figure: kit.minifig(m, { ...kit.chair(m, {...}), torso, … }) seats someone on it. */
@@ -398,7 +400,7 @@ export function snowman(m, { x, y, z, hat = 'Black', scarf = 'Red' }) {
 
 /** A finished minifig-scale vehicle, 4 studs wide, running along z with its front at +z — start every road vehicle from this.
  *  kind: 'car' (len 8–10: bonnet, windscreen, open cockpit with a seat, boot) | 'van' / 'truck' (len 10–16: cab with windscreen,
- *  box body behind; truck: an open flatbed) | 'bus' (len 16–24, 4 wide, tall glazed body). x, z = the min corner of its 4 × len
+ *  box body behind; truck: an open flatbed) | 'fire' (len 12–16: lockers with a stripe, beacons, a ladder) | 'bus' (len 16–24, 4 wide, tall glazed body). x, z = the min corner of its 4 × len
  *  footprint; y = the surface it stands on. color, accent: body colours; glass: windows. Returns { top, cabSeat, bed } — a seat for a
  *  driver (kit.minifig(m, { ...cabSeat, … })) and, for trucks, the level of the bed to load things on. It stands loose on its wheels. */
 export function vehicle(m, { x, y, z, len = 8, kind = 'car', color = 'Red', accent = 'White', glass = 'Trans Clear', tyre = 'Black', rim = 'Light Bluish Gray' }) {
@@ -428,7 +430,7 @@ export function vehicle(m, { x, y, z, len = 8, kind = 'car', color = 'Red', acce
     window(m, { x, y: f + 6, z: front - 1, size: '1x4x3', frame: accent, glass }); m.cut(x, f, front, 4, 1, 3);
     m.box(x, f + H, z + 1, 4, len - 2, 1, accent, { kind: 'tile' });
     out.cabSeat = { x: x + 1, y: f, z: front - 3, rot: 0, sit: true };
-  } else {   // van / truck: cab at the front
+  } else {   // van / truck / fire engine: cab at the front
     const cz = front - 4;                                                               // the cab: rows cz .. front − 1
     m.box(x, f, cz, 4, 4, 3, color); m.cut(x + 1, f, cz + 1, 2, 2, 3);                   // cab lower, a seat well
     m.part('3823', x, f + 3, front - 2, glass);                                         // windscreen
@@ -436,8 +438,36 @@ export function vehicle(m, { x, y, z, len = 8, kind = 'car', color = 'Red', acce
     m.box(x, f + 9, cz, 4, 4, 1, color, { kind: 'plate' }); m.box(x, f + 10, cz, 4, 4, 1, accent, { kind: 'tile' });   // roof
     out.cabSeat = { x: x + 1, y: f, z: cz + 1, rot: 0, sit: true };
     if (kind === 'van') { m.box(x, f, z + 1, 4, cz - z - 1, 12, color, { hollow: true, top: 'tile' }); m.box(x, f + 3, z + 2, 1, cz - z - 3, 3, accent); m.box(x + 3, f + 3, z + 2, 1, cz - z - 3, 3, accent); }
+    else if (kind === 'fire') {   // a fire engine: equipment lockers with a white stripe, beacons on the cab, a ladder on top
+      m.box(x, f, z + 1, 4, cz - z - 1, 9, color, { hollow: true, top: 'plate' });
+      for (const side of [x, x + 3]) m.box(side, f + 3, z + 2, 1, cz - z - 3, 1, 'White', { kind: 'plate' });   // stripe
+      m.cut(x, f + 3, z + 2, 1, cz - z - 3, 1); m.cut(x + 3, f + 3, z + 2, 1, cz - z - 3, 1);
+      m.box(x, f + 3, z + 2, 1, cz - z - 3, 1, 'White', { kind: 'plate' }); m.box(x + 3, f + 3, z + 2, 1, cz - z - 3, 1, 'White', { kind: 'plate' });
+      for (const lx of [x, x + 3]) m.part('6141', lx, f + 11, cz + 1, 'Trans Dark Blue');                     // beacons on the cab roof
+      m.cut(x, f + 10, cz + 1, 1, 1, 1); m.cut(x + 3, f + 10, cz + 1, 1, 1, 1); m.box(x, f + 10, cz + 1, 1, 1, 1, color, { kind: 'plate' }); m.box(x + 3, f + 10, cz + 1, 1, 1, 1, color, { kind: 'plate' });
+      const L = cz - z - 1; for (const lx of [x, x + 3]) m.box(lx, f + 9, z + 1, 1, L, 1, 'Light Bluish Gray', { kind: 'plate', unit: 'ladder' + lx });   // ladder rails
+      for (let r = z + 2; r < cz; r += 2) m.tile('1x2', x + 1, f + 9, r, 'Light Bluish Gray');               // rungs
+      out.bed = f + 9; }
     else { m.box(x, f, z + 1, 4, cz - z - 1, 1, 'Dark Bluish Gray', { kind: 'plate' }); out.bed = f + 1;
       m.box(x, f + 1, z + 1, 1, cz - z - 1, 3, color); m.box(x + 3, f + 1, z + 1, 1, cz - z - 1, 3, color); }
   }
   return out;
 }
+
+/** A display-scale casing for an appliance or a device (an espresso machine, a radio, a console, a toaster): a hollow body with a smooth
+ *  tiled top, its top front edge rounded with curved slopes, an optional panel (screen / fascia) and a row of buttons on the front.
+ *  x, z, w, d: footprint (w ≥ 4, even); y: where it stands; h: height in plates (a multiple of 3). Front = +z.
+ *  panel: { color, rows, from } — tiled face mounted on the front, `from` plates above the bottom (a multiple of 3, default 3).
+ *  buttons: [colours] — round tiles along the front top ledge. Returns { top, front: z + d − 1 }. */
+export function casing(m, { x, y, z, w, d, h = 12, color = 'Light Bluish Gray', trim = 'Dark Bluish Gray', panel, buttons, feet = true }) {
+  let y0 = y;
+  if (feet) { for (const [fx, fz] of [[x, z], [x + w - 1, z], [x, z + d - 1], [x + w - 1, z + d - 1]]) m.part('6141', fx, y, fz, trim); m.box(x, y + 1, z, w, d, 1, trim, { kind: 'plate' }); y0 = y + 2; }
+  m.box(x, y0, z, w, d - 1, h, color, { hollow: true, top: 'tile' });                 // the body, one stud short at the front…
+  m.box(x, y0, z + d - 1, w, 1, h - 2, color, { hollow: false });                      // …the front wall, two plates lower
+  for (let u = 0; u < w; u += 2) m.part('15068', x + u, y0 + h - 2, z + d - 2 + 0, color, 0);   // curved 2×2 over the front top edge
+  m.cut(x, y0 + h - 2, z + d - 2, w, 2, 2);
+  if (panel) panelFn(m, { x, y: y0 + (panel.from ?? 3), z: z + d - 1, w: w - 2 > 0 ? w - 2 : w, rows: panel.rows ?? 1, color: panel.color ?? 'Black', brick: color, xFrom: x + 1 });
+  if (buttons) buttons.forEach((c, i) => { if (i < w) { const bx = x + w - 1 - i; m.cut(bx, y0 + h - 1, z + d - 3, 1, 1, 1); m.part('98138', bx, y0 + h - 1, z + d - 3, c); } });
+  return { top: y0 + h, front: z + d - 1 };
+}
+const panelFn = (m, o) => panel(m, { ...o, x: o.xFrom ?? o.x });
