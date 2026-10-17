@@ -142,8 +142,8 @@ export function wheels(m, { x, y = 0, z, rot = 0, color = 'Red', tyre = 'Black',
 export function water(m, { x, y, z, w, d, color = 'Dark Azure', glint = 'Medium Azure', glints = 0.04 }) {
   const rnd = m.rand; const cells = [];
   for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) if (rnd() < glints) cells.push([x + i, z + k]);
-  for (const [cx, cz] of cells) { m.cut(cx, y, cz, 1, 1, 1); m.part('98138', cx, y, cz, glint); }
   m.box(x, y, z, w, d, 1, color, { kind: 'tile' });
+  for (const [cx, cz] of cells) { m.cut(cx, y, cz, 1, 1, 1); m.part('98138', cx, y, cz, glint); }
 }
 /** A rock outcrop over a rectangle, up to h plates (a multiple of 3) high: irregular terraces of bricks in two greys, the rims softened with
  *  small slopes. The outline is rounded by itself; give it a rectangle a little larger than the rock you want. Returns nothing. */

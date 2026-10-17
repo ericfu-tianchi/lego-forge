@@ -7,8 +7,8 @@ plus `model.ldr` (opens in BrickLink Studio) and `parts.csv`.
 **The bar is a set someone would be proud to put on a shelf**, not a pile of bricks that passes a test: the subject is recognisable at a
 glance, the proportions are right, it looks designed. Target **300–1,500 parts** (hard limit 2,000).
 
-Read this file once, completely, before you start. Then read `docs/TECHNIQUES.md` and look at the worked example
-`examples/cottage/` (its `build.mjs` and `out/hero.png`). The parts list is `docs/PARTS.md` (pictures of every part:
+Read this file once, completely, before you start. Then read `docs/TECHNIQUES.md` and the worked examples — `examples/cottage/`
+(a minifig-scale scene) and `examples/retro-computer/` (a display-scale object): read each `build.mjs` and look at its `out/hero.png`. The parts list is `docs/PARTS.md` (pictures of every part:
 `docs/gallery/<category>.png`), colours `docs/COLORS.md`, the review rubric `docs/RUBRIC.md`.
 
 ---
@@ -143,7 +143,7 @@ export default m;
 | `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
 | `m.brick(size, x, y, z, color, rot)` · `m.plate(…)` · `m.tile(…)` | a plain part by its LEGO size; rot 0 = long side along x, rot 1 = along z |
 | `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'tile'` = finish the top with tiles (on a hollow box the lid is made solid underneath) |
-| `m.cut(x, y, z, w, d, h)` | removes box() volume from a region (openings, inlays) — order does not matter, it applies to every box |
+| `m.cut(x, y, z, w, d, h)` | removes the box() volume built so far in a region (openings, inlays): box first, then cut (kits cut their own openings) |
 | `m.section(tag, fn)` | groups parts (shown in check messages; `shots --only tag` renders just that section) |
 | `m.rigid(fn)` | parts that are one unit (as kits use); rarely needed |
 

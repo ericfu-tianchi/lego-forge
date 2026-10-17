@@ -15,7 +15,7 @@ export class Model {
   /** @param {{ title: string, subtitle?: string, budget?: [number, number], seed?: number }} meta */
   constructor(meta = {}) {
     this.meta = { title: 'Untitled set', subtitle: '', budget: [300, 2000], ...meta };
-    this.parts = []; this.vox = new Map(); this.cuts = []; this.owner = new Map(); this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
+    this.parts = []; this.vox = new Map(); this.cuts = []; this.owner = new Map(); this.warnings = []; this.rand = mulberry32(meta.seed ?? 1); this.tag = ''; this.groupId = null; this._groups = 0; this.errors = [];
     this._src = null;
   }
   /** Mark everything placed inside fn with a tag (shown by the checker and usable in renders: --only <tag>). */
@@ -41,6 +41,8 @@ export class Model {
   /** Fill a box with bricks/plates/tiles: w × d studs, h plates (bricks need h a multiple of 3 to stay bricks). The packer staggers the joints.
    *  opts.hollow leaves the inside empty (walls one stud thick); opts.top: 'tile' caps the top layer with tiles. */
   box(x, y, z, w, d, h, color, opts = {}) {
+    for (const c of this.cuts) if (c[1] > y && x < c[0] + c[3] && c[0] < x + w && y < c[1] + c[5] && c[1] < y + h && z < c[2] + c[4] && c[2] < z + d)   // an opening inside a wall built after it
+      this.warnings.push(`box() at ${callerLine() || 'kit'} fills space an earlier cut() emptied (${c[6] || 'a kit'}): cuts only remove what was boxed before them — if that opening should stay open, box first and cut after`);
     const kind = opts.kind ?? (h % 3 === 0 ? 'brick' : 'plate'); const capped = opts.hollow && (opts.top || opts.cap);
     for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let j = 0; j < h; j++) {
       const inside = i > 0 && i < w - 1 && k > 0 && k < d - 1;
@@ -58,8 +60,11 @@ export class Model {
     }
     return this;
   }
-  /** Remove box() volume from a region (an opening for a window or door). Order does not matter: cuts apply to every box, before or after. */
-  cut(x, y, z, w, d, h) { this.cuts.push([x, y, z, w, d, h]); return this; }
+  /** Remove box() volume from a region (an opening for a window or door). It removes what has been boxed so far: box first, then cut. */
+  cut(x, y, z, w, d, h) {
+    for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let j = 0; j < h; j++) this.vox.delete(`${x + i},${y + j},${z + k}`);
+    this.cuts.push([x, y, z, w, d, h, callerLine()]); return this;
+  }
   /** Parts placed inside fn form one rigid unit (a minifigure): they may touch each other and count as connected to each other. */
   rigid(fn) { const g = this.groupId; this.groupId = `g${++this._groups}`; try { fn(); } finally { this.groupId = g; } return this; }
   /** A part placed by an exact transform (kits only): p = LDraw origin in model units (studs; y in studs, not plates), m = row-major 3×3. */
@@ -70,8 +75,6 @@ export class Model {
   }
   /** Turn the box volumes into real parts (called by the CLI before checking). */
   pack() {
-    for (const [x, y, z, w, d, h] of this.cuts) for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) for (let j = 0; j < h; j++) this.vox.delete(`${x + i},${y + j},${z + k}`);
-    this.cuts = [];
     if (!this.vox.size) return this;
     const layers = new Map(); for (const k of this.vox.keys()) { const [x, y, z] = k.split(',').map(Number); if (!layers.has(y)) layers.set(y, []); layers.get(y).push([x, z]); }
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);

@@ -11,6 +11,7 @@ export function check(model) {
   const parts = model.parts; const R = parts.map((p) => resolve(p));
   const issues = []; const add = (level, i, msg, hint) => issues.push({ level, part: i, msg, hint, where: i == null ? '' : where(parts[i]) });
   for (const e of model.errors) issues.push({ level: 'error', part: null, msg: e, hint: '', where: '' });
+  for (const w of [...new Set(model.warnings ?? [])]) issues.push({ level: 'warn', part: null, msg: w, hint: '', where: '' });
 
   // ---- grid hygiene
   parts.forEach((p, i) => { if (p.free) return; const half = (v) => Math.abs(v * 2 - Math.round(v * 2)) > 1e-6;
