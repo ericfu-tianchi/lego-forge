@@ -3,3 +3,5 @@ node_modules/
 sets/_*/
 sets/*/out/view.png
 .DS_Store
+sets/*
+!sets/.gitkeep

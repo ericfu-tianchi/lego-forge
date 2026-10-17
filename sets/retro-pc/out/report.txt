@@ -1,4 +1,0 @@
-FAIL · 423 parts · 44 kinds · 8 build colours · 22% specialty parts · 1 errors · 0 warnings
-✗ Plate 1 x 1 [3024] Tan is not connected to the rest of the set
-    box() at x 14 y 5 z 19 · case
-    → put it on studs: its bottom must sit exactly on top of a part below, over that part's studs
