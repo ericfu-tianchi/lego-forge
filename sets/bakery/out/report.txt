@@ -1,0 +1,5 @@
+PASS · 497 parts · 53 kinds · 14 build colours · 37% specialty parts · 0 errors · 2 warnings
+! 497 parts — under 700: likely too plain
+    → add the details that make the subject recognisable
+! 14 colours in the build (figures, plants and glass not counted) — busy
+    → a strong set uses 4–8 colours

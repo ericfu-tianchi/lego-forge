@@ -13,13 +13,19 @@ function onStud(id, rot, fx, fz, sx, sz) { const d = partDef(id); const [fw, fd]
 function rider(m, host, id, color, off = { p: [0, 0, 0], m: [1, 0, 0, 0, 1, 0, 0, 0, 1] }) { const r = resolve(host); const w = mulv(r.m, off.p); return m.free(id, color, [r.origin[0] + w[0], r.origin[1] + w[1], r.origin[2] + w[2]], mul(r.m, off.m)); }
 
 // ---- windows and doors -------------------------------------------------------------------------------------------------------
-const WINDOWS = { '1x2x2': ['60592', '60601', 6], '1x2x3': ['60593', '60602', 9], '1x4x3': ['60594', '60603', 9] };
+const WINDOWS = { '1x2x2': ['60592', '60601', 6], '1x2x3': ['60593', '60602', 9], '1x4x3': ['60594', '60603', 9, ld(0, 10, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1)] };
 /** A window in a wall: frame + glass. x, z = min corner of its footprint (a 2- or 4-stud run of the wall), y = bottom.
- *  Cuts its opening out of any box() volume first. size '1x2x2' | '1x2x3' | '1x4x3'; rot 0/2 for walls running along x, 1/3 along z. */
-export function window(m, { x, y, z, rot = 0, size = '1x2x2', frame = 'White', glass = 'Trans Clear' }) {
-  const [fid, gid, h] = WINDOWS[size] ?? WINDOWS['1x2x2']; const [fw, fd] = footprint(partDef(fid), rot);
+ *  Cuts its opening out of any box() volume. size '1x2x2' | '1x2x3' | '1x4x3'. rot = the side the window looks out of: 0 front (+z), 1 right (+x),
+ *  2 back (−z), 3 left (−x). sill: a colour → a plate sill under it, sticking out one stud. */
+export function window(m, { x, y, z, rot = 0, size = '1x2x2', frame = 'White', glass = 'Trans Clear', sill }) {
+  const [fid, gid, h, gOff] = WINDOWS[size] ?? WINDOWS['1x2x2']; const [fw, fd] = footprint(partDef(fid), rot);
   m.cut(x, y, z, fw, fd, h);
-  let host; m.rigid(() => { host = m.part(fid, x, y, z, frame, rot); if (host) rider(m, host, gid, glass); }); return host;
+  let host; m.rigid(() => { host = m.part(fid, x, y, z, frame, rot); if (host) rider(m, host, gid, glass, gOff); });
+  if (sill) {   // a 2-deep plate under the frame: one row in the wall, one sticking out on the outside face (rot 0 → +z, 1 → +x, 2 → −z, 3 → −x)
+    const n = Math.max(fw, fd); m.cut(x, y - 1, z, fw, fd, 1);
+    const [sx, sz] = [[x, z], [x, z], [x, z - 1], [x - 1, z]][rot]; m.plate(rot % 2 === 0 ? `${n}x2` : `2x${n}`, sx, y - 1, sz, sill);
+  }
+  return host;
 }
 /** A door: 1×4×6 frame (18 plates tall) with a three-pane door, hinged on the left. Cuts its opening. */
 export function door(m, { x, y, z, rot = 0, frame = 'White', color = 'Red' }) {
@@ -30,8 +36,10 @@ export function door(m, { x, y, z, rot = 0, frame = 'White', color = 'Red' }) {
 // ---- roofs ---------------------------------------------------------------------------------------------------------------------
 /** A pitched roof over the rectangle x..x+w, z..z+d (studs), starting at plate level y. ridge 'x': the ridge runs along x, the slopes
  *  face +z and −z; ridge 'z': along z. Courses of 45° slopes step in one stud per brick of height; the gable ends are filled with
- *  bricks in `gable` colour (default: the roof colour). Returns the plate level of the top. */
-export function roof(m, { x, y, z, w, d, color = 'Dark Bluish Gray', gable, ridge = 'x' }) {
+ *  bricks in `gable` colour (default: the roof colour). overhang: studs the roof reaches past the walls on every side (0 or 1; the slab it
+ *  sits on must cover the walls). Returns the plate level of the top. */
+export function roof(m, { x, y, z, w, d, color = 'Dark Bluish Gray', gable, ridge = 'x', overhang = 0 }) {
+  if (overhang) { x -= overhang; z -= overhang; w += 2 * overhang; d += 2 * overhang; }
   gable = gable ?? color; const along = ridge === 'x';
   const W = along ? w : d, D = along ? d : w;          // W along the ridge, D across it
   if (D % 2) { m.errors.push(`roof(): the roof must be an even number of studs across the ridge (got ${D})`); return y; }
@@ -111,4 +119,65 @@ export function base(m, { x = 0, y = 0, z = 0, w, d, color = 'Green', under = 'D
     for (let i = 0; i + 1 < xs.length; i++) for (let k = 0; k + 1 < zs.length; k++) m.box(xs[i], yy, zs[k], xs[i + 1] - xs[i], zs[k + 1] - zs[k], 1, c, { kind: 'plate', unit: `base${yy}:${i},${k}` });
   }
   return y + 2;
+}
+
+// ---- vehicles -----------------------------------------------------------------------------------------------------------------------
+/** An axle with two wheels under a 4×2 mudguard: the wheel-holder plate (pins one stud out each side), a rim and tyre on each pin, and the
+ *  mudguard (arches over the wheels) on top. x, z = the mudguard's 4×2 position (x..x+4 at rot 0); y = the holder's level — 2 puts the
+ *  tyres on the ground. Returns the level of the mudguard's top (y + 3): build the car body from there. rot 0: axle along x (car runs along z). */
+export function wheels(m, { x, y, z, rot = 0, color = 'Red', tyre = 'Black', rim = 'Light Bluish Gray' }) {
+  m.rigid(() => {
+    const along = rot % 2 === 0; const host = m.part('4600', along ? x + 0.5 : x, y, along ? z : z + 0.5, 'Black', along ? 0 : 1); if (!host) return;
+    for (const s of [1, -1]) { const off = ld(30 * s, 6, 0, 0, 0, -s, 0, 1, 0, s, 0, 0); rider(m, host, '4624', rim, off); rider(m, host, '3641', tyre, off); }
+    m.part('3788', x, y + 1, z, color, along ? 0 : 1);
+  }); return y + 3;
+}
+
+// ---- landscape -----------------------------------------------------------------------------------------------------------------------
+/** Water over a rectangle: smooth tiles (no studs) with a few round tiles as glints. Lay it on a base (y = the base's top). */
+export function water(m, { x, y, z, w, d, color = 'Dark Azure', glint = 'Medium Azure', glints = 0.08 }) {
+  const rnd = m.rand; const cells = [];
+  for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) if (rnd() < glints) cells.push([x + i, z + k]);
+  for (const [cx, cz] of cells) { m.cut(cx, y, cz, 1, 1, 1); m.part('98138', cx, y, cz, glint); }
+  m.box(x, y, z, w, d, 1, color, { kind: 'tile' });
+}
+/** A rock outcrop over a rectangle, up to h plates (a multiple of 3) high: irregular terraces of bricks in two greys, the rims softened with
+ *  small slopes. The outline is rounded by itself; give it a rectangle a little larger than the rock you want. Returns nothing. */
+export function rocks(m, { x, y, z, w, d, h = 9, colors = ['Dark Bluish Gray', 'Light Bluish Gray'], seed = 1 }) {
+  const rnd = m.rand; const cx = (w - 1) / 2, cz = (d - 1) / 2; const H = [];
+  const noise = (i, k) => { const s = Math.sin(i * 12.99 + k * 78.23 + seed * 3.1) * 43758.5; return s - Math.floor(s); };
+  for (let i = 0; i < w; i++) { H.push([]); for (let k = 0; k < d; k++) {
+    const r = Math.hypot((i - cx) / (w / 2), (k - cz) / (d / 2)); const v = (1 - r * r) * 1.15 + (noise(i >> 1, k >> 1) - 0.5) * 0.45;
+    H[i].push(Math.max(0, Math.min(h, Math.round((v * h) / 3) * 3))); } }
+  for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) { const hh = H[i][k]; if (!hh) continue;
+    const c = colors[(noise((i >> 1) + 7, (k >> 1) + 3) < 0.65 ? 0 : 1) % colors.length];   // colour in 2×2 patches, not speckles
+    m.box(x + i, y, z + k, 1, 1, hh, c, { unit: `rock${(i >> 1)},${(k >> 1)}` }); }
+  // rims: a cheese slope on top of an edge cell, facing its lowest neighbour
+  for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) { const hh = H[i][k]; if (!hh) continue;
+    const nb = [[1, 0, 1], [-1, 0, 3], [0, 1, 0], [0, -1, 2]].map(([dx, dz, rot]) => [(H[i + dx]?.[k + dz] ?? 0), rot]); const low = nb.reduce((a, b) => (b[0] < a[0] ? b : a));
+    if (hh - low[0] >= 3 && noise(i + 3, k + 9) < 0.7) m.part('54200', x + i, y + hh, z + k, colors[noise(i, k + 5) < 0.5 ? 0 : 1], low[1]); }
+}
+/** A round tower: a stack of round bricks, 2 or 4 studs across, h plates high (multiple of 3). bands: colours that repeat course by course
+ *  (['White', 'Red'] for a striped lighthouse). Returns the top level. */
+export function roundTower(m, { x, y, z, h, size = 4, bands = ['White'] }) {
+  const id = size >= 4 ? '87081' : '3941'; let t = y; let n = 0;
+  while (t < y + h) { m.part(id, x, t, z, bands[n % bands.length]); t += 3; n++; }
+  return t;
+}
+/** A lattice fence along x (dir 'x') or z (dir 'z'), len studs long (made of 1×4 fences; len a multiple of 4 reads best). */
+export function fence(m, { x, y, z, len, dir = 'x', color = 'White' }) {
+  for (let u = 0; u + 4 <= len; u += 4) m.part('3633', dir === 'x' ? x + u : x, y, dir === 'x' ? z : z + u, color, dir === 'x' ? 0 : 1);
+}
+/** A flower bed: a soil plate with flowers (and a few leaves) on its studs. */
+export function flowerBed(m, { x, y, z, w, d, colors = ['Red', 'Yellow', 'Bright Pink', 'White'], soil = 'Reddish Brown', leaves = 'Green', density = 0.6 }) {
+  m.box(x, y, z, w, d, 1, soil, { kind: 'plate' });
+  for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) { const r = m.rand(); if (r < density) m.part('24866', x + i, y + 1, z + k, colors[Math.floor(m.rand() * colors.length)]); else if (r < density + 0.25) m.part('6141', x + i, y + 1, z + k, leaves); }
+}
+/** A garden bench, 4 studs long along x (rot 0) or z (rot 1): two round legs, a smooth seat, a backrest at the back edge. */
+export function bench(m, { x, y, z, rot = 0, color = 'Reddish Brown', legs = 'Black' }) {
+  m.rigid(() => {
+    const at = (u, v) => (rot % 2 === 0 ? [x + u, z + v] : [x + v, z + u]);
+    for (const u of [0, 3]) { const [a, b] = at(u, 0); m.part('3062b', a, y, b, legs); }
+    const [sx, sz] = at(0, 0); m.tile(rot % 2 === 0 ? '4x1' : '1x4', sx, y + 3, sz, color);
+  });
 }

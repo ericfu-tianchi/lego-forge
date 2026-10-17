@@ -1,0 +1,3 @@
+PASS · 117 parts · 38 kinds · 7 build colours · 24% specialty parts · 0 errors · 1 warnings
+! 117 parts — under 300: likely too plain
+    → add the details that make the subject recognisable

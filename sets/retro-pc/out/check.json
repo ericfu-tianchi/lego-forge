@@ -1,0 +1,21 @@
+{
+ "ok": false,
+ "errors": 1,
+ "warnings": 0,
+ "issues": [
+  {
+   "level": "error",
+   "part": 206,
+   "msg": "Plate 1 x 1 [3024] Tan is not connected to the rest of the set",
+   "hint": "put it on studs: its bottom must sit exactly on top of a part below, over that part's studs",
+   "where": "box() at x 14 y 5 z 19 · case"
+  }
+ ],
+ "stats": {
+  "parts": 423,
+  "types": 44,
+  "colors": 8,
+  "specialShare": 0.22,
+  "components": 2
+ }
+}

@@ -56,7 +56,7 @@ const det3 = (M) => M[0] * (M[4] * M[8] - M[5] * M[7]) - M[1] * (M[3] * M[8] - M
 const STUD = /^stud(2|2a|6|6a|p01|10|15|17a|18a)?\.dat$/;
 /** → { tris: [{ c: colour code ('16' = the part's own colour), p: [9 numbers, LDraw frame] }], studs: [{ at, dir }], certified } */
 async function parse(name) {
-  const tris = [], studs = []; let certified = true;
+  const tris = [], studs = [], tubes = []; let certified = true;
   async function walk(text, M, color, invert, depth, isTop) {
     let ccw = true, inv = false, cert = false;
     for (const raw of text.split('\n')) {
@@ -67,6 +67,7 @@ async function parse(name) {
         const n = t.slice(2, 14).map(Number); const L = [n[3], n[4], n[5], n[6], n[7], n[8], n[9], n[10], n[11], n[0], n[1], n[2]]; const W = mul(M, L);
         const sub = t.slice(14).join(' '); const base = path.basename(sub.replace(/\\/g, '/')).toLowerCase();
         if (STUD.test(base)) studs.push({ at: apply(W, [0, 0, 0]), dir: rotv(W, [0, -1, 0]) });
+        if (/^stud4(a|o|s|h|f)?\.dat$/.test(base)) tubes.push(apply(W, [0, 0, 0]));
         const txt = depth < 12 ? await findFile(sub) : null; if (txt) await walk(txt, W, col, invert !== (inv !== (det3(L) < 0)), depth + 1, false);
         inv = false; continue;
       }
@@ -81,7 +82,7 @@ async function parse(name) {
   }
   const text = await findFile(name); if (!text) return null;
   await walk(text, [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0], '16', false, 0, true);
-  return { tris, studs, certified, header: text.split('\n')[0].replace(/^0\s*/, '').trim() };
+  return { tris, studs, tubes, certified, header: text.split('\n')[0].replace(/^0\s*/, '').trim() };
 }
 
 // ---- geometry helpers ---------------------------------------------------------------------------------------------------------
@@ -127,7 +128,7 @@ function category(n) {
 const STUD_H = 0.2125, PL = 0.4; let done = 0;
 for (let id of ids) {
   let res = await parse(id + '.dat'); if (!res) { console.log(`✗ ${id}: not in the LDraw library`); continue; }
-  const moved = /^~Moved to (\S+)/.exec(res.header); if (moved) { console.log(`· ${id} → ${moved[1]} (moved)`); id = moved[1]; res = await parse(id + '.dat'); }
+  for (let hop = 0; hop < 4; hop++) { const moved = /^~Moved to (\S+)/.exec(res.header); if (!moved) break; console.log(`· ${id} → ${moved[1]} (moved)`); id = moved[1]; res = await parse(id + '.dat'); }
   if (/Obsolete/i.test(res.header)) { console.log(`✗ ${id}: obsolete (${res.header})`); continue; }
   if (catalog[id] && !force && fs.existsSync(path.join(GEO, id + '.json'))) continue;
   // LDraw → ours, and split by colour
@@ -141,8 +142,11 @@ for (let id of ids) {
   const topStud = up.length ? Math.max(...up.map((u) => u.at[1])) : -Infinity;
   const top = up.length && Math.abs(bb.max.y - (topStud + STUD_H)) < 0.08 ? topStud : bb.max.y;   // the body ends where the top studs begin
   const body = [bb.min.x, bb.min.y, bb.min.z, bb.max.x, Math.max(top, bb.min.y + 0.01), bb.max.z];
-  const cx = (body[0] + body[3]) / 2, cz = (body[2] + body[5]) / 2, y0 = body[1];
-  const W = Math.max(1, Math.round(body[3] - body[0] - 0.1)), D = Math.max(1, Math.round(body[5] - body[2] - 0.1)), H = (body[4] - body[1]) / PL;
+  const cx = (body[0] + body[3]) / 2, cz = (body[2] + body[5]) / 2;
+  // the connection plane: whole plates below the top studs (a wheel-holder's pins or a hanging detail reach below it)
+  let y0 = body[1]; if (up.length) { const k = (topStud - bb.min.y) / PL; if (Math.abs(k - Math.round(k)) > 0.05) y0 = topStud - Math.max(1, Math.round(k)) * PL; }
+  body[1] = Math.min(body[1], y0);
+  const W = Math.max(1, Math.round(body[3] - body[0] - 0.1)), D = Math.max(1, Math.round(body[5] - body[2] - 0.1)), H = (body[4] - y0) / PL;
   const studs = up.map((s) => [+(s.at[0] - cx).toFixed(3), +(s.at[2] - cz).toFixed(3), +((s.at[1] - y0) / PL).toFixed(2)]);
   const cols = [], female = [];
   for (let i = 0; i < W; i++) for (let j = 0; j < D; j++) {
@@ -158,8 +162,11 @@ for (let id of ids) {
     const empty = !tris.some((t) => triBox(t, [X, y0 + 0.11, Z], [0.2, 0.08, 0.2]));
     if (empty && reach) female.push([+x.toFixed(3), +z.toFixed(3)]);
   }
+  // no anti-stud found in the cells: a stud tube (stud4) at the bottom takes a stud (birds, some animals); an animal stands on one stud
+  if (!female.length) for (const t of res.tubes) { const p = [t[0] / 20, -t[1] / 20, -t[2] / 20]; if (Math.abs(p[1] - y0) < 0.35) female.push([+(p[0] - cx).toFixed(3), +(p[2] - cz).toFixed(3)]); }
+  if (!female.length && /^Animal/.test(res.header.replace(/^[~=_|]+/, '')) && cols.some((c) => c[2] < 0.1)) { const c = cols.reduce((a, b) => (Math.hypot(a[0], a[1]) <= Math.hypot(b[0], b[1]) ? a : b)); female.push([c[0], c[1]]); }
   const name = res.header.replace(/^[~=_|]+/, '').replace(/\s+/g, ' ');
-  catalog[id] = { id, name, cat: category(name), w: W, d: D, h: +H.toFixed(2), body: body.map((v) => +v.toFixed(4)), studs, female, cols, deco: deco.length > 0 || glass.length > 0, ...(res.certified ? {} : { ds: true }) };
+  catalog[id] = { id, name, cat: category(name), w: W, d: D, h: +H.toFixed(2), body: body.map((v) => +v.toFixed(4)), base: +y0.toFixed(4), studs, female, cols, deco: deco.length > 0 || glass.length > 0, ...(res.certified ? {} : { ds: true }) };
   fs.writeFileSync(path.join(GEO, id + '.json'), JSON.stringify({ main: main.length ? meshOf(main, false) : null, deco: deco.length ? meshOf(deco, true) : null, glass: glass.length ? meshOf(glass, true) : null }));
   done++; console.log(`✓ ${id} ${name} · ${W}×${D}×${H.toFixed(2)}p · ${studs.length} studs · ${female.length} anti-studs${deco.length ? ' · printed' : ''}${res.certified ? '' : ' · not BFC'}`);
 }

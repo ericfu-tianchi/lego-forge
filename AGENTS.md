@@ -7,7 +7,9 @@ plus `model.ldr` (opens in BrickLink Studio) and `parts.csv`.
 **The bar is a set someone would be proud to put on a shelf**, not a pile of bricks that passes a test: the subject is recognisable at a
 glance, the proportions are right, it looks designed. Target **300–1,500 parts** (hard limit 2,000).
 
-Read this file once, completely, before you start. The parts list is `docs/PARTS.md`, colours `docs/COLORS.md`, the review rubric `docs/RUBRIC.md`.
+Read this file once, completely, before you start. Then read `docs/TECHNIQUES.md` and look at the worked example
+`examples/cottage/` (its `build.mjs` and `out/hero.png`). The parts list is `docs/PARTS.md` (pictures of every part:
+`docs/gallery/<category>.png`), colours `docs/COLORS.md`, the review rubric `docs/RUBRIC.md`.
 
 ---
 
@@ -51,10 +53,15 @@ texture and life (§5). Use `docs/PARTS.md` and `node bin/lego.mjs parts <words>
 build.mjs and grid position) and what to do. Fix the cause, not the symptom (a part "not connected" usually sits one plate too high, or
 on a smooth tile, or on the sloped face of a slope).
 
-### Step 5 · Review — look at your own renders
+### Step 5 · Review — look at your own renders, critically
 `node bin/lego.mjs shots <name>` → `out/sheet.png` (six views) and `out/hero.png`. **Open and look at both images every round.**
-Score the set with `docs/RUBRIC.md` honestly (write the scores in `brief.md`). Fix the lowest row first. Repeat steps 3–5 until every row
-is ≥ 7 — **at most 3 review rounds**; then deliver with an honest note of what is still weak.
+Close-ups: `shots <name> --only <section>` renders one section alone. With a picture: `--ref <image> --view <angle>` → `out/compare.png`.
+1. **Critique first**: write in `brief.md` at least five concrete problems you can see ("the left wall is a blank 10×12 white surface",
+   "the tower is thinner than the door is wide", "the rock is a stepped rectangle"). Builders always rate their own work too high —
+   assume a strict LEGO designer is looking.
+2. **Then score** with `docs/RUBRIC.md`, applying its caps (a cap is a ceiling: a big blank wall caps Detail at 5 however nice the rest is).
+3. Fix the lowest row first, then the next. Repeat steps 3–5 until every row is ≥ 7 — **at most 3 review rounds**; then deliver with an
+   honest note of what is still weak.
 
 ### Step 6 · Deliver
 Tell the user: what you built (one paragraph), the part count, the file to open (`sets/<name>/out/set.html`), and that `model.ldr`
@@ -73,6 +80,9 @@ opens in BrickLink Studio for building instructions and part ordering.
 - `rot` turns a part a quarter at a time about its own centre (0–3). Footprints swap: a 2×4 brick is 4×2 at rot 1.
 - A part sits on another when its `y` equals the top of the one below: a brick at y = 3 sits on a brick at y = 0; a plate at y = 1 sits on a plate at y = 0.
 - The **front is +z**: put the most interesting side there. Figures face the front with rot 0.
+- Things that face a direction (kit windows and doors, figures, slopes) use the same rule: **rot 0 faces +z (front), 1 faces +x (right),
+  2 faces −z (back), 3 faces −x (left)**. A window in the left wall of a house is rot 3; in the back wall rot 2.
+- A wall built with `box()` from x to x+w−1: its front wall is the row z+d−1, its back wall the row z, its left wall column x, right x+w−1.
 - Half studs (x = 2.5) only where a jumper plate (15573, 87580) or a kit put them.
 
 ## 3. Scale — pick one, keep it everywhere
@@ -82,6 +92,10 @@ opens in BrickLink Studio for building instructions and part ordering.
   built (often 1:2–1:1 of the real thing for small objects). Every detail is built from parts; nothing is "implied".
 - **Micro scale** (a whole city block, a ship): 1 stud ≈ 1–2 m; windows become tiles and grilles, people are left out.
 Mixing scales (a minifig next to a micro building) is the most common way a set looks wrong.
+
+**How big.** A set is 300–1,500 parts (the checker refuses under 150). Typical sizes: a house or shop scene 400–1,000 parts on a 24×24–32×32 base;
+a vehicle 200–500; an object model 300–800; a landmark 500–1,500. A small subject (a lighthouse, a food cart) gets a setting — ground, water,
+rocks, plants, a figure or two — not filler. A minifig-scale building is at least 10×8 studs and 2 storeys (or one storey + roof ≥ 30 plates).
 
 ## 4. Colour
 - 4–8 colours. One main colour (the subject's material), one or two secondary, one or two accents used sparingly (doors, signs, flowers).
@@ -122,23 +136,33 @@ export default m;
 | `new Model({ title, subtitle, budget: [min, max] })` | the set |
 | `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
 | `m.brick(size, x, y, z, color)` · `m.plate(…)` · `m.tile(…)` | a plain part; `size` = x-extent × z-extent, e.g. `'2x4'` runs 4 studs along z |
-| `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` for slabs; `hollow: true` = walls only; `top: 'tile'` = smooth top |
-| `m.cut(x, y, z, w, d, h)` | removes part of a box() volume (openings) — call before the volume is packed (anytime in build.mjs) |
+| `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'tile'` = finish the top with tiles (on a hollow box the lid is made solid underneath) |
+| `m.cut(x, y, z, w, d, h)` | removes box() volume from a region (openings, inlays) — order does not matter, it applies to every box |
 | `m.section(tag, fn)` | groups parts (shown in check messages; `shots --only tag` renders just that section) |
 | `m.rigid(fn)` | parts that are one unit (as kits use); rarely needed |
 
-`box()` volumes are turned into real bricks after build.mjs runs. Parts placed with `part()` and box volumes may not overlap — cut the box first.
+`box()` volumes are turned into real bricks after build.mjs runs. Parts placed with `part()` and box volumes may not overlap — cut the box.
+Sizes for `brick/plate/tile` are **x-extent × z-extent**: a 6-long tile running left–right is `m.tile('6x1', …)`, front–back `m.tile('1x6', …)`.
+Tiles have no studs on top: nothing can be built on them (that is the point). Studs only connect to a part whose bottom is exactly on them.
+A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15573, 87580) under it.
 
 ### Kit (`engine/kit.mjs`) — proven sub-builds; use them instead of re-inventing
 | call | builds |
 |---|---|
 | `kit.base(m, { x, z, w, d, color, under })` | a 2-plate base that holds together; returns the top level |
-| `kit.window(m, { x, y, z, rot, size: '1x2x2'∣'1x2x3'∣'1x4x3', frame, glass })` | frame + glass in a wall (cuts its opening). rot 0/2 in walls along x, 1/3 along z |
+| `kit.window(m, { x, y, z, rot, size: '1x2x2'∣'1x2x3'∣'1x4x3', frame, glass, sill })` | frame + glass in a wall (cuts its opening). rot = the side it looks out of (0 front … 3 left); `sill: colour` adds a sill |
 | `kit.door(m, { x, y, z, rot, frame, color })` | 1×4×6 door frame + door (cuts its opening; 18 plates tall) |
-| `kit.roof(m, { x, y, z, w, d, color, gable, ridge: 'x'∣'z' })` | a 45° pitched roof over a rectangle; even number of studs across the ridge; returns the top level |
+| `kit.roof(m, { x, y, z, w, d, color, gable, ridge: 'x'∣'z', overhang })` | a 45° pitched roof over a rectangle; even number of studs across the ridge; returns the top level |
 | `kit.tree(m, { x, y, z, size: 'S'∣'M'∣'L', leaves, cap, trunk })` | a leafy tree on a 2×2 footprint (canopy ~6×6) |
 | `kit.pine(m, { x, y, z, big })` · `kit.bush(…)` · `kit.flower(m, { x, y, z, color })` | moulded plants |
 | `kit.lamp(m, { x, y, z, color, light })` | a street lamp on one stud |
+| `kit.bench(m, { x, y, z, rot, color, legs })` | a garden bench, 4 studs long |
+| `kit.fence(m, { x, y, z, len, dir: 'x'∣'z', color })` | a lattice fence (1×4 sections) |
+| `kit.flowerBed(m, { x, y, z, w, d, colors, soil })` | a soil plate full of flowers |
+| `kit.water(m, { x, y, z, w, d, color, glint })` | water: smooth tiles with glints (lay it on the base) |
+| `kit.rocks(m, { x, y, z, w, d, h, colors, seed })` | an irregular rock outcrop (h a multiple of 3); never build rocks as stepped boxes |
+| `kit.roundTower(m, { x, y, z, h, size: 2∣4, bands })` | a round tower of round bricks; `bands` repeats colours course by course |
+| `kit.wheels(m, { x, y, z, rot, color })` | an axle with wheels under a 4×2 mudguard (y = 2 puts the tyres on the ground); returns the level to build the body on |
 | `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included) |
 
 ## 7. Checker messages and what they mean

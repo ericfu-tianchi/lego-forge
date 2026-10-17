@@ -121,7 +121,7 @@ $('title').textContent = SET.meta.title; $('sub').textContent = SET.meta.subtitl
 document.title = SET.meta.title;
 function ui() { $('apart').hidden = state !== 'built'; $('rebuild').hidden = state === 'built'; $('rebuild').disabled = state === 'rebuilding'; }
 $('apart').onclick = () => setState('apart'); $('rebuild').onclick = () => setState('rebuilding');
-if (SHEET || STILL) document.body.classList.add('still');
+if (SHEET || STILL) document.body.classList.add('still'); if (SHEET) document.body.classList.add('sheet');
 
 // ---- loop -----------------------------------------------------------------------------------------------------------------------
 if (!STILL) { for (const it of items) snapshot.set(it, intro(it)); state = 'rebuilding'; t0 = 0; }

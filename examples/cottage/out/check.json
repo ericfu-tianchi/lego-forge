@@ -1,0 +1,21 @@
+{
+ "ok": true,
+ "errors": 0,
+ "warnings": 1,
+ "issues": [
+  {
+   "level": "warn",
+   "part": null,
+   "msg": "281 parts — under 400: likely too plain",
+   "hint": "add the details that make the subject recognisable, or a setting around it",
+   "where": ""
+  }
+ ],
+ "stats": {
+  "parts": 281,
+  "types": 57,
+  "colors": 7,
+  "specialShare": 0.42,
+  "components": 1
+ }
+}

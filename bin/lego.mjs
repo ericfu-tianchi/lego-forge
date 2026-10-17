@@ -5,6 +5,7 @@
 //   lego shots <set> [--only t] [--ref img --view v]  review images → out/sheet.png (six views), out/hero.png; with --ref, out/compare.png
 //                                (the reference beside a render; --view hero|front|back|left|right|top picks the angle that matches it)
 //   lego parts [words…]          search the parts catalogue (id, size, studs)
+//   lego gallery                 (maintainers) render docs/gallery/<category>.png — every part, labelled
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [cmd, ...rest] = process.argv.slice(2);
@@ -26,6 +27,8 @@ if (cmd === 'build') {
 } else if (cmd === 'shots') {
   const dir = setDir(rest[0]); const out = path.join(dir, 'out'); const only = rest.includes('--only') ? rest[rest.indexOf('--only') + 1] : null;
   const page = path.join(out, 'set.html'); if (!fs.existsSync(page)) { console.error('run `lego build` first'); process.exit(1); }
+  const rep = fs.existsSync(path.join(out, 'report.txt')) ? fs.readFileSync(path.join(out, 'report.txt'), 'utf8') : ''; if (rep.startsWith('FAIL')) console.log('! the last build FAILED the check — these images show a model that cannot be built as is');
+  if (fs.statSync(path.join(dir, 'build.mjs')).mtimeMs > fs.statSync(page).mtimeMs) console.log('! build.mjs changed since the last build — run `lego build` first');
   let chromium; try { ({ chromium } = await import('playwright')); } catch { console.error('shots need Playwright: npm i -D playwright && npx playwright install chromium'); process.exit(1); }
   const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--use-gl=angle'] });
   const shot = async (q, file, w, h) => { const pg = await browser.newPage({ viewport: { width: w, height: h } }); await pg.goto(pathToFileURL(page).href + '?' + q); await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.waitForTimeout(200); await pg.screenshot({ path: file }); await pg.close(); };
@@ -46,6 +49,17 @@ if (cmd === 'build') {
   const hits = Object.values(CATALOG).filter((p) => words.every((w) => `${p.id} ${p.name} ${p.cat}`.toLowerCase().includes(w)));
   for (const p of hits.slice(0, 80)) console.log(`${p.id.padEnd(11)} ${p.name.slice(0, 60).padEnd(60)} ${p.w}×${p.d} · ${p.h}p · ${p.studs.length} studs${p.female.length ? '' : ' · no anti-studs'}`);
   if (hits.length > 80) console.log(`… ${hits.length - 80} more — narrow the search`);
+} else if (cmd === 'gallery') {
+  const { CATALOG } = await import('../engine/catalog.mjs'); const { chromium } = await import('playwright');
+  const js = fs.readFileSync(path.join(ROOT, 'viewer/dist/gallery.js'), 'utf8'); fs.mkdirSync(path.join(ROOT, 'docs/gallery'), { recursive: true });
+  const cats = [...new Set(Object.values(CATALOG).map((p) => p.cat))]; const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist'] });
+  for (const cat of cats) {
+    const parts = Object.values(CATALOG).filter((p) => p.cat === cat && !/^Moved/.test(p.name)).map((p) => ({ id: p.id, name: p.name.slice(0, 34), geo: JSON.parse(fs.readFileSync(path.join(ROOT, 'engine/parts/geo', p.id + '.json'), 'utf8')) }));
+    const H = Math.ceil(parts.length / 6) * 260 + 60; const pg = await browser.newPage({ viewport: { width: 1560, height: H } });
+    await pg.setContent(`<html><body style="margin:0;background:#f2f0ea;font:13px -apple-system,Helvetica,sans-serif;color:#333"><canvas id="c" style="position:absolute;left:0;top:0"></canvas><div id="labels"></div><style>#labels div{position:absolute;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;padding:0 6px;box-sizing:border-box}#labels h1{position:absolute;left:16px;top:6px;margin:0;font-size:22px}</style><script>window.GALLERY=${JSON.stringify({ title: cat, parts })}</script><script>${js}</script></body></html>`);
+    await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.screenshot({ path: path.join(ROOT, 'docs/gallery', cat + '.png'), fullPage: true }); await pg.close(); console.log(`docs/gallery/${cat}.png (${parts.length})`);
+  }
+  await browser.close();
 } else if (cmd === 'new') {
   const name = rest[0]; if (!name) usage(); const d = path.join(ROOT, 'sets', name); if (fs.existsSync(d)) { console.error(`${d} exists`); process.exit(1); }
   fs.mkdirSync(d, { recursive: true });

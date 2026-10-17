@@ -12,5 +12,16 @@ fan design", 9 = "could be an official set". Write the scores in brief.md every 
 | **Colour** | 4–8 colours from the subject; clear main/secondary/accent; base neutral | rainbow, or one flat colour; accents everywhere |
 | **Composition** | front faces the viewer; the set is framed by a base sized to it (scenes); 1–3 figures doing something legible; a small story | empty base or crammed base; figures standing around; the best side hidden |
 
+**Caps** — a cap is the highest score a row can get while the problem is visible in the hero view:
+- a blank wall or face wider than ~8 studs and taller than 2 bricks with nothing on it → Detail ≤ 5
+- terrain, rocks or hills built as stepped rectangles → Detail ≤ 5
+- an object model with bare studs on its main top surfaces → Detail ≤ 6
+- under 300 parts → Detail ≤ 6
+- subject and base in the same or nearly the same colour → Colour ≤ 5
+- more than 8 main colours → Colour ≤ 6
+- a signature feature missing or unreadable → Recognisable ≤ 5
+- a minifigure next to a building whose door or storey is smaller than the figure → Proportion ≤ 4
+- the most interesting side faces away from the front (+z) → Composition ≤ 5
+
 **Critical failures** (fix before anything else): the checker fails; the subject is unrecognisable; parts float in the renders; the
 model is mostly hidden inside the base; more than 2,000 parts.

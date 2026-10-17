@@ -22,7 +22,7 @@ export function resolve(p) {
     return { def, origin: o, m, aabb: [...lo, ...hi], studs: [], female: [], cols: [], free: true };
   }
   const [fw, fd] = footprint(def, p.rot); const cx = p.x + fw / 2, cz = p.z + fd / 2, y0 = p.y;
-  const m = rotM(p.rot); const b = def.body; const bc = [(b[0] + b[3]) / 2, b[1], (b[2] + b[5]) / 2];
+  const m = rotM(p.rot); const b = def.body; const bc = [(b[0] + b[3]) / 2, def.base ?? b[1], (b[2] + b[5]) / 2];
   const r = mulv(m, bc); const origin = [cx - r[0], y0 * PL - r[1], cz - r[2]];
   const at = (x, z) => { const [a, c] = turn(x, z, p.rot); return [cx + a, cz + c]; };
   return {

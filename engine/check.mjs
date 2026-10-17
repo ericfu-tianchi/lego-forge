@@ -31,7 +31,7 @@ export function check(model) {
   for (const i of freeIdx) { const A = R[i].aabb;
     for (let j = 0; j < parts.length; j++) { if (j === i || sameGroup(parts[i], parts[j])) continue; const r = R[j];
       const hits = r.free ? boxHit(A, r.aabb) : r.cols.some(([x, z, a, b]) => boxHit(A, [x - 0.5, a * 0.4, z - 0.5, x + 0.5, b * 0.4, z + 0.5]));
-      if (hits && (r.free ? i < j : true)) { const k = i < j ? `${i}|${j}` : `${j}|${i}`; if (clash.has(k)) continue; clash.add(k); add('error', i, `${label(parts[i])} passes through ${label(parts[j])} (${where(parts[j])})`, 'leave a clear stud of room around a minifigure'); } } }
+      if (hits && (r.free ? i < j : true)) { const k = i < j ? `${i}|${j}` : `${j}|${i}`; if (clash.has(k)) continue; clash.add(k); add('error', i, `${label(parts[i])} passes through ${label(parts[j])} (${where(parts[j])})`, 'two parts cannot share space — move one, or leave more room around it'); } } }
 
   // ---- connections: a stud of a part below plugs into an anti-stud of a part whose bottom is exactly at the stud's base
   const adj = parts.map(() => new Set()); const link = (a, b) => { adj[a].add(b); adj[b].add(a); };
@@ -54,12 +54,13 @@ export function check(model) {
   }
 
   // ---- size and character
-  const st = model.stats(); const [lo, hi] = model.meta.budget;
+  const st = model.stats(); const [lo, hi] = model.meta.budget; { const cnt = new Map(); const body = parts.filter((p) => !/minifig|plant|animal/.test(partDef(p.id).cat) && !/^Trans/.test(p.color)); for (const p of body) cnt.set(p.color, (cnt.get(p.color) ?? 0) + 1); st.colors = [...cnt.values()].filter((n) => n >= Math.max(3, body.length * 0.03)).length; }   // colours that make up the build (≥ 3% of it), not every accent
   if (st.parts > hi) add('error', null, `${st.parts} parts — over the budget of ${hi}`, 'simplify: fewer filler bricks inside, larger plates under floors');
-  if (st.parts < lo) add('warn', null, `${st.parts} parts — under ${lo}: likely too plain`, 'add the details that make the subject recognisable');
+  if (st.parts < 150) add('error', null, `${st.parts} parts — too small to be a set`, 'a set is 300–1,500 parts: build the subject bigger (more detail per feature) or give it a setting (ground, props, figures, a display stand)');
+  else if (st.parts < Math.max(lo, 300)) add('warn', null, `${st.parts} parts — under ${Math.max(lo, 300)}: likely too plain`, 'add the details that make the subject recognisable, or a setting around it');
   const special = parts.filter((p) => !/^(brick|plate)$/.test(partDef(p.id).cat)).length / Math.max(1, parts.length);
-  if (special < 0.12 && parts.length > 100) add('warn', null, `only ${(special * 100).toFixed(0)}% of the parts are not plain bricks/plates`, 'use slopes, tiles, round parts, windows, plants and details: they are what make a set look designed');
-  if (st.colors > 12) add('warn', null, `${st.colors} colours — busy`, 'a strong set uses 4–8 colours');
+  if (special < 0.25 && parts.length > 100) add('warn', null, `only ${(special * 100).toFixed(0)}% of the parts are not plain bricks/plates (good sets: 25–50%)`, 'use slopes, tiles, round parts, windows, plants and details: they are what make a set look designed');
+  if (st.colors > 9) add('warn', null, `${st.colors} main colours (each ≥ 3% of the parts) — busy`, 'a strong set uses 4–8 colours');
   const errors = issues.filter((x) => x.level === 'error').length;
   return { ok: errors === 0, errors, warnings: issues.length - errors, issues, stats: { ...st, specialShare: +special.toFixed(2), components: n } };
 }
@@ -70,7 +71,7 @@ const tube = (f, x, z) => [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].e
 export function label(p) { const d = partDef(p.id); return `${d ? d.name.replace(/\s+/g, ' ') : p.id} [${p.id}] ${p.color}`; }
 export function where(p) { return `${p.line ? p.line + ' ' : ''}${p.free ? 'kit' : `at x ${p.x} y ${p.y} z ${p.z}${p.rot ? ` rot ${p.rot}` : ''}`}${p.tag ? ` · ${p.tag}` : ''}`; }
 export function report(res) {
-  const L = [`${res.ok ? 'PASS' : 'FAIL'} · ${res.stats.parts} parts · ${res.stats.types} kinds · ${res.stats.colors} colours · ${res.errors} errors · ${res.warnings} warnings`];
+  const L = [`${res.ok ? 'PASS' : 'FAIL'} · ${res.stats.parts} parts · ${res.stats.types} kinds · ${res.stats.colors} build colours · ${Math.round(res.stats.specialShare * 100)}% specialty parts · ${res.errors} errors · ${res.warnings} warnings`];
   const shown = res.issues.slice(0, 40);
   for (const x of shown) L.push(`${x.level === 'error' ? '✗' : '!'} ${x.msg}${x.where ? `\n    ${x.where}` : ''}${x.hint ? `\n    → ${x.hint}` : ''}`);
   if (res.issues.length > shown.length) L.push(`… and ${res.issues.length - shown.length} more`);
