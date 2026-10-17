@@ -29,7 +29,8 @@ const TITLE = { brick: 'Bricks', plate: 'Plates', tile: 'Tiles (no studs on top)
 const L = ['# Parts', '', 'Every part here is a real LEGO part (LDraw id). Size is **x × z studs at rot 0, then height in plates** (3 plates = 1 brick).',
   '"studs" = studs on top (what can be built on it); "no anti-studs" = it cannot sit on studs (it needs a clip or a bar — avoid unless a kit places it).',
   'For slopes and curves, "faces +z" means the sloped face drops towards +z at rot 0; rot 1 turns that to +x, rot 2 to −z, rot 3 to −x.',
-  'Plain bricks, plates and tiles are easier through `m.brick(size, …)`, `m.plate(size, …)`, `m.tile(size, …)` and `m.box(…)`.', '',
+  'Plain bricks, plates and tiles are easier through `m.brick(size, …)`, `m.plate(size, …)`, `m.tile(size, …)` and `m.box(…)`.',
+  'Where exactly a part has its studs and anti-studs: `node bin/lego.mjs part <id>` (a top view).', '',
   `Sized helpers — bricks: ${Object.keys(BRICK).join(', ')} · plates: ${Object.keys(PLATE).join(', ')} · tiles: ${Object.keys(TILE).join(', ')}`, ''];
 for (const cat of ORDER) {
   const list = Object.values(CATALOG).filter((p) => p.cat === cat && !KIT_ONLY.test(p.id) && !/^Moved/.test(p.name)); if (!list.length) continue;

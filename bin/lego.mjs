@@ -5,6 +5,7 @@
 //   lego shots <set> [--only t] [--ref img --view v]  review images → out/sheet.png (six views), out/hero.png; with --ref, out/compare.png
 //                                (the reference beside a render; --view hero|front|back|left|right|top picks the angle that matches it)
 //   lego parts [words…]          search the parts catalogue (id, size, studs)
+//   lego part <id>               one part, top view: where its studs and anti-studs are, which way it faces
 //   lego gallery                 (maintainers) render docs/gallery/<category>.png — every part, labelled
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -49,6 +50,16 @@ if (cmd === 'build') {
   const hits = Object.values(CATALOG).filter((p) => words.every((w) => `${p.id} ${p.name} ${p.cat}`.toLowerCase().includes(w)));
   for (const p of hits.slice(0, 80)) console.log(`${p.id.padEnd(11)} ${p.name.slice(0, 60).padEnd(60)} ${p.w}×${p.d} · ${p.h}p · ${p.studs.length} studs${p.female.length ? '' : ' · no anti-studs'}`);
   if (hits.length > 80) console.log(`… ${hits.length - 80} more — narrow the search`);
+} else if (cmd === 'part') {
+  const { part } = await import('../engine/catalog.mjs'); const p = part(rest[0] ?? ''); if (!p) { console.error(`no part ${rest[0]} — search with: lego parts <words>`); process.exit(1); }
+  console.log(`${p.id} · ${p.name} · ${p.cat}\nfootprint at rot 0: ${p.w} along x × ${p.d} along z · ${p.h} plates tall (${(p.h / 3).toFixed(2)} bricks)`);
+  const cell = (x, z, list) => list.some(([a, b]) => Math.abs(a - x) < 0.05 && Math.abs(b - z) < 0.05);
+  const grid = (title, list, mark) => { console.log(`\n${title}   (top view, x → right, z ↓ = towards the front)`); for (let j = 0; j < p.d; j++) { let row = '  '; for (let i = 0; i < p.w; i++) { const x = -p.w / 2 + i + 0.5, z = -p.d / 2 + j + 0.5; const filled = p.cols.some(([a, b]) => Math.abs(a - x) < 0.05 && Math.abs(b - z) < 0.05); row += cell(x, z, list) ? ` ${mark} ` : filled ? ' · ' : '   '; } console.log(row); } };
+  grid('studs on top  (o = stud, · = no stud)', p.studs.map((s) => [s[0], s[1]]), 'o'); grid('anti-studs underneath  (x = takes a stud from below)', p.female, 'x');
+  const off = p.studs.filter((s) => !p.cols.some(([a, b]) => Math.abs(a - s[0]) < 0.05 && Math.abs(b - s[1]) < 0.05)); if (off.length) console.log(`\nstuds between cells (centred): ${off.map((s) => `(${s[0]}, ${s[1]}) from the centre`).join(', ')} — parts above line up with them, not with the cells`);
+  const lowTop = p.studs.filter((s) => Math.abs(s[2] - p.h) > 0.05); if (lowTop.length) console.log(`studs below the top: at ${[...new Set(lowTop.map((s) => s[2]))].join(', ')} plates`);
+  if (!p.female.length) console.log('\n! no anti-studs: this part cannot sit on studs (it hangs on a clip, bar or pin) — kits place such parts');
+  if (/slope|curve/.test(p.cat)) { let gx = 0, gz = 0; const my = p.cols.reduce((a, c) => a + c[3], 0) / p.cols.length; for (const [x, z, , y1] of p.cols) { gx += x * (y1 - my); gz += z * (y1 - my); } if (Math.hypot(gx, gz) > 0.2) console.log(`slope: at rot 0 the face drops towards ${Math.abs(gz) >= Math.abs(gx) ? (gz > 0 ? '−z (back)' : '+z (front)') : gx > 0 ? '−x (left)' : '+x (right)'}; rot turns that direction a quarter at a time: rot 0 front, 1 right, 2 back, 3 left (for a part that faces front at rot 0)`); }
 } else if (cmd === 'gallery') {
   const { CATALOG } = await import('../engine/catalog.mjs'); const { chromium } = await import('playwright');
   const js = fs.readFileSync(path.join(ROOT, 'viewer/dist/gallery.js'), 'utf8'); fs.mkdirSync(path.join(ROOT, 'docs/gallery'), { recursive: true });

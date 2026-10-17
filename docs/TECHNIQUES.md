@@ -23,7 +23,9 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 - **Base**: `kit.base` — a 2-plate base that holds together. Size it 2–4 studs bigger than the subject on each side; empty base reads as unfinished.
 - **Paths and pavements**: tiles (`m.box(x, y, z, w, d, 1, 'Tan', { kind: 'tile' })`), leaving studs on grass.
 - **Water**: `kit.water` (smooth tiles with glints). Stones at its edge: 1×1 round tiles. Lily pads: round tiles set into the water.
-- **Rocks and cliffs**: `kit.rocks` — irregular grey terraces; never a stepped rectangle.
+- **Islands, hills, cliffs**: `kit.island` (irregular outline, sand rim, rock relief, a flat terrace for a building) over `kit.water`;
+  `kit.rocks` for a single outcrop. Never a stepped rectangle.
+- **Beach**: `kit.palm`, `kit.parasol`, sand (Tan) ground, water with a sand rim.
 - **Plants**: `kit.tree` (leafy), `kit.pine`, `kit.bush`, `kit.flower`, `kit.flowerBed`. Two or three plants of different heights beat a row of identical ones.
 - **Street furniture**: `kit.lamp`, `kit.bench`, `kit.fence`.
 

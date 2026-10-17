@@ -4,6 +4,7 @@ Every part here is a real LEGO part (LDraw id). Size is **x × z studs at rot 0,
 "studs" = studs on top (what can be built on it); "no anti-studs" = it cannot sit on studs (it needs a clip or a bar — avoid unless a kit places it).
 For slopes and curves, "faces +z" means the sloped face drops towards +z at rot 0; rot 1 turns that to +x, rot 2 to −z, rot 3 to −x.
 Plain bricks, plates and tiles are easier through `m.brick(size, …)`, `m.plate(size, …)`, `m.tile(size, …)` and `m.box(…)`.
+Where exactly a part has its studs and anti-studs: `node bin/lego.mjs part <id>` (a top view).
 
 Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x4, 2x6, 2x8, 2x10 · plates: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x4, 2x6, 2x8, 2x10, 2x12, 4x4, 4x6, 4x8, 4x10, 4x12, 6x6, 6x8, 6x10, 6x12, 6x16, 8x8, 8x16, 16x16 · tiles: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 2x2, 2x3, 2x4
 
@@ -33,7 +34,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 3941 | Brick 2 x 2 Round without Reinforcement | 2×2 · 3p | 4 studs | round 2×2 brick: columns, trunks, barrels |
 | 4070 | Brick 1 x 1 with Headlight | 1×1 · 3p | 1 studs | headlight brick |
 | 4733 | Brick 1 x 1 with Studs on Four Sides | 1×1 · 3p | 1 studs |  |
-| 4735 | Brick 1 x 1 x 0.667 Round with Bar and Clip Vertical | 1×3 · 2.5p | 1 studs · no anti-studs |  |
+| 4735 | Brick 1 x 1 x 0.667 Round with Bar and Clip Vertical | 1×3 · 2.5p | 1 studs |  |
 | 6111 | Brick 1 x 10 | 10×1 · 3p | 10 studs |  |
 | 6112 | Brick 1 x 12 | 12×1 · 3p | 12 studs |  |
 | 6143 | Brick 2 x 2 Round Reinforced | 2×2 · 3p | 4 studs |  |
@@ -64,7 +65,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 2445 | Plate 2 x 12 | 12×2 · 1p | 24 studs |  |
 | 2450 | Plate 3 x 3 without Corner | 3×3 · 1p | 6 studs |  |
 | 2540 | Plate 1 x 2 with Handle | 2×2 · 1p | 2 studs · no anti-studs |  |
-| 2926 | Plate 1 x 4 with 2 Wheel Pins | 5×1 · 1.25p | 4 studs · no anti-studs |  |
+| 2926 | Plate 1 x 4 with 2 Wheel Pins | 5×1 · 1p | 4 studs · no anti-studs |  |
 | 3020 | Plate 2 x 4 | 4×2 · 1p | 8 studs |  |
 | 3021 | Plate 2 x 3 | 3×2 · 1p | 6 studs |  |
 | 3022 | Plate 2 x 2 | 2×2 · 1p | 4 studs |  |
@@ -89,39 +90,39 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 3958 | Plate 6 x 6 | 6×6 · 1p | 36 studs |  |
 | 4477 | Plate 1 x 10 | 10×1 · 1p | 10 studs |  |
 | 4488 | Plate 2 x 2 with 1 Wheel Pin | 3×2 · 2p | 4 studs |  |
-| 4600 | Plate 2 x 2 with 2 Wheel Pins | 3×2 · 1.25p | 4 studs · no anti-studs | wheel holder plate (wheels: see Vehicles) |
-| 6019 | Plate 1 x 1 with Clip Horizontal (Thick U-Clip) | 1×2 · 2p | 1 studs · no anti-studs |  |
+| 4600 | Plate 2 x 2 with 2 Wheel Pins | 3×2 · 1p | 4 studs · no anti-studs | wheel holder plate (wheels: see Vehicles) |
+| 6019 | Plate 1 x 1 with Clip Horizontal (Thick U-Clip) | 1×2 · 1.75p | 1 studs · no anti-studs |  |
 | 6141 | Plate 1 x 1 Round | 1×1 · 1p | 1 studs | round 1×1: lights, knobs, flower centres |
 | 6157 | Plate 2 x 2 with 2 Wheel Pins Extended without Wishbones | 4×2 · 2p | 4 studs |  |
 | 15573 | Plate 1 x 2 with Groove with 1 Centre Stud, without Understud | 2×1 · 1p | 1 studs | jumper: one centred stud — offsets the next part by half a stud |
-| 18677 | Plate 1 x 2 with Offset Peghole on Underside | 2×1 · 2.37p | 2 studs · no anti-studs |  |
+| 18677 | Plate 1 x 2 with Offset Peghole on Underside | 2×1 · 2p | 2 studs · no anti-studs |  |
 | 22888 | Plate 4 x 8 Round Semicircle | 8×4 · 1p | 22 studs |  |
 | 24866 | Plate 1 x 1 with 5 Petals | 1×1 · 1p | 1 studs | flower 1×1 |
 | 26047 | Plate 1 x 1 Round with Horizontal Handle on Side | 1×2 · 1p | 1 studs · no anti-studs |  |
 | 30565 | Plate 4 x 4 with Corner Round | 4×4 · 1p | 11 studs |  |
 | 32028 | Plate 1 x 2 with Door Rail | 2×1 · 1p | 2 studs · no anti-studs |  |
-| 32607 | Plate 1 x 1 Round with 3 Leaves | 2×2 · 1p | 1 studs · no anti-studs |  |
+| 32607 | Plate 1 x 1 Round with 3 Leaves | 2×2 · 1p | 1 studs |  |
 | 33291 | Plate 1 x 1 Round with Tabs | 1×1 · 1p | 1 studs |  |
 | 35480 | Plate 1 x 2 with Round Ends and 2 Open Studs | 2×1 · 1p | 2 studs |  |
 | 41539 | Plate 8 x 8 | 8×8 · 1p | 64 studs |  |
 | 60478 | Plate 1 x 2 with Handle on End | 3×1 · 1p | 2 studs |  |
 | 60479 | Plate 1 x 12 | 12×1 · 1p | 12 studs |  |
-| 61252 | Plate 1 x 1 with Clip Horizontal (Thick C-Clip) | 1×2 · 1.18p | 1 studs · no anti-studs |  |
-| 63868 | Plate 1 x 2 with Clip Horizontal on End (Thick C-Clip) | 3×1 · 1.18p | 2 studs · no anti-studs |  |
+| 61252 | Plate 1 x 1 with Clip Horizontal (Thick C-Clip) | 1×2 · 1p | 1 studs · no anti-studs |  |
+| 63868 | Plate 1 x 2 with Clip Horizontal on End (Thick C-Clip) | 3×1 · 1p | 2 studs · no anti-studs |  |
 | 85861 | Plate 1 x 1 Round with Open Stud | 1×1 · 1p | 1 studs |  |
 | 87580 | Plate 2 x 2 with Groove with 1 Centre Stud | 2×2 · 1p | 1 studs | jumper 2×2: one centred stud |
 | 91405 | Plate 16 x 16 with Underside Ribs | 16×16 · 1p | 256 studs | plate 16×16 |
 | 92280 | Plate 1 x 2 with Single Clip on Top | 2×1 · 2.25p | 1 studs |  |
 | 92438 | Plate 8 x 16 | 16×8 · 1p | 128 studs |  |
 | 92593 | Plate 1 x 4 with Two Studs | 4×1 · 1p | 2 studs |  |
-| 99206 | Plate 2 x 2 x 0.667 with Two Studs On Side and Two Raised with Closed Understud | 2×2 · 2p | 4 studs · no anti-studs |  |
+| 99206 | Plate 2 x 2 x 0.667 with Two Studs On Side and Two Raised with Closed Understud | 2×2 · 2p | 4 studs |  |
 | 3023b | Plate 1 x 2 | 2×1 · 1p | 2 studs |  |
 | 3794b | Plate 1 x 2 with Groove with 1 Centre Stud | 2×1 · 1p | 1 studs | jumper (older id) |
-| 3839b | Plate 1 x 2 with Handles Type 2 | 3×2 · 1.25p | 2 studs · no anti-studs |  |
+| 3839b | Plate 1 x 2 with Handles Type 2 | 3×2 · 1p | 2 studs · no anti-studs |  |
 | 4032a | Plate 2 x 2 Round with Axlehole | 2×2 · 1p | 4 studs |  |
-| 4081b | Plate 1 x 1 with Clip Light Type 2 | 1×2 · 2p | 1 studs · no anti-studs |  |
+| 4081b | Plate 1 x 1 with Clip Light Type 2 | 1×2 · 1.75p | 1 studs |  |
 | 4085c | Plate 1 x 1 with Clip Vertical (Thick U-Clip) | 1×2 · 1p | 1 studs · no anti-studs |  |
-| 30157a | Plate 2 x 4 with Rounded Pins | 6×2 · 2.25p | 8 studs |  |
+| 30157a | Plate 2 x 4 with Rounded Pins | 6×2 · 2p | 8 studs |  |
 
 ## Tiles (no studs on top)
 
@@ -219,7 +220,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 |---|---|---|---|---|
 | 3960 | Dish 4 x 4 Inverted | 4×4 · 2p | 1 studs | dish 4×4 |
 | 4589 | Cone 1 x 1 | 1×1 · 3p | 1 studs | cone 1×1: tips, lamp tops |
-| 4740 | Dish 2 x 2 Inverted | 2×2 · 1p | 1 studs · no anti-studs | dish 2×2: satellite dishes, lamp shades |
+| 4740 | Dish 2 x 2 Inverted | 2×2 · 1p | 1 studs | dish 2×2: satellite dishes, lamp shades |
 | 6233 | Cone 3 x 3 x 2 | 3×3 · 6p | 4 studs |  |
 | 15395 | Dome 2 x 2 Inverted with Stud and Tube | 2×2 · 3.5p | 1 studs |  |
 | 59900 | Cone 1 x 1 with Stop | 1×1 · 3p | 1 studs |  |
@@ -273,7 +274,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 87544 | Panel 1 x 2 x 3 Reinforced with Hollow Studs | 2×1 · 9p | 2 studs | panel 1×2×3 |
 | 87552 | Panel 1 x 2 x 2 Reinforced | 2×1 · 6p | 2 studs | panel 1×2×2 |
 | 2493b | Window 1 x 4 x 5 with Hollow Studs | 4×1 · 15p | 4 studs |  |
-| 3861c | Door 1 x 4 x 5 with 4 Panes and Reinforced Hinge | 1×4 · 15p | 1 studs · no anti-studs |  |
+| 3861c | Door 1 x 4 x 5 with 4 Panes and Reinforced Hinge | 1×4 · 15p | 1 studs |  |
 | 4865a | Panel 1 x 2 x 1 with Square Corners | 2×1 · 3p | smooth | panel 1×2×1: low walls, counters |
 
 ## Details (bars, brackets, hinges, wings…)
@@ -292,7 +293,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 4274 | Technic Pin 1/2 | 1×1 · 2p | smooth · no anti-studs |  |
 | 4346 | Container Box 2 x 2 x 2 Door with Slot | 2×1 · 6p | smooth · no anti-studs |  |
 | 4594 | Windscreen 2 x 4 x 2 Vertical | 4×2 · 6p | 6 studs |  |
-| 4598 | Bracket 2 x 3 - 2 x 2 | 2×3 · 6p | 5 studs · no anti-studs |  |
+| 4598 | Bracket 2 x 3 - 2 x 2 | 2×3 · 6p | 5 studs |  |
 | 6020 | Bar 7 x 3 with Double Clips | 3×7 · 2p | smooth · no anti-studs |  |
 | 6134 | Hinge 2 x 2 Top | 2×2 · 2p | 4 studs · no anti-studs |  |
 | 6187 | Bar 1 x 4 x 2 | 4×1 · 6p | smooth |  |
@@ -305,13 +306,13 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 87994 | Bar 3L | 1×1 · 7.5p | smooth · no anti-studs |  |
 | 99207 | Bracket 1 x 2 - 2 x 2 Up | 2×1 · 5p | 2 studs · no anti-studs |  |
 | 99780 | Bracket 1 x 2 - 1 x 2 Up | 2×1 · 2.5p | 2 studs · no anti-studs |  |
-| 99781 | Bracket 1 x 2 - 1 x 2 Down | 2×1 · 2.5p | 2 studs |  |
+| 99781 | Bracket 1 x 2 - 1 x 2 Down | 2×1 · 3p | 2 studs · no anti-studs |  |
 | 2436a | Bracket 1 x 2 - 1 x 4 with Square Corners | 4×1 · 2.5p | 2 studs |  |
 | 3957a | Antenna 4H with Rounded Top | 1×1 · 12p | smooth |  |
-| 4345b | Container Box 2 x 2 x 2 with Hollow Studs | 2×2 · 6p | 4 studs · no anti-studs |  |
+| 4345b | Container Box 2 x 2 x 2 with Hollow Studs | 2×2 · 6p | 4 studs |  |
 | 4346p01 | Container Box 2 x 2 x 2 Door with Fire Logo Red/Orange/Yellow Pattern | 2×1 · 6p | smooth · no anti-studs |  |
-| 4495a | Flag 4 x 1 with First Wave Left | 1×4 · 3p | 1 studs · no anti-studs |  |
-| 4599a | Tap 1 x 1 with Hole in Spout | 1×1 · 3p | 1 studs · no anti-studs |  |
+| 4495a | Flag 4 x 1 with First Wave Left | 1×4 · 3p | 1 studs |  |
+| 4599a | Tap 1 x 1 with Hole in Spout | 1×1 · 3p | 1 studs |  |
 | 32064a | Technic Brick 1 x 2 with Axlehole with Open Sides and Stud Blocker | 2×1 · 3p | 2 studs |  |
 | 41769a | Wing 2 x 4 Right without Chamfer | 2×4 · 1p | 4 studs |  |
 | 41770a | Wing 2 x 4 Left without Chamfer | 2×4 · 1p | 4 studs |  |
@@ -324,11 +325,11 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | id | part | size | top | note |
 |---|---|---|---|---|
 | 2417 | Plant Leaves 6 x 5 | 5×6 · 1p | 14 studs | leaves 6×5: tree canopies (see kit.tree) |
-| 2423 | Plant Leaves 4 x 3 | 3×4 · 1p | 6 studs · no anti-studs | leaves 4×3 (no anti-studs: rides on a clip — avoid) |
+| 2423 | Plant Leaves 4 x 3 | 3×4 · 1p | 6 studs | leaves 4×3 (no anti-studs: rides on a clip — avoid) |
 | 2435 | Plant Tree Pyramidal 3 x 3 x 4 | 3×3 · 12.38p | smooth | small moulded pine |
 | 3471 | Plant Tree Pyramidal 4 x 4 x 6.667 Type 1 | 4×4 · 19.88p | smooth | moulded pine tree |
 | 3742 | Plant Flower | 1×1 · 0.75p | smooth · no anti-studs |  |
-| 6148 | Plant Palm Leaf Small | 8×3 · 4.06p | 2 studs · no anti-studs |  |
+| 6148 | Plant Palm Leaf Small | 8×3 · 4p | 2 studs · no anti-studs |  |
 | 6255 | Plant 1 x 1 x 0.667 Round with 3 Large Leaves | 5×4 · 5.43p | 1 studs · no anti-studs |  |
 | 15279 | Plant Grass Stem | 1×2 · 8p | smooth |  |
 | 19119 | Plant Flower Stem with Bar and 6 Stems | 2×3 · 5.35p | smooth · no anti-studs |  |
@@ -336,7 +337,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 30176 | Plant Brick 1 x 1 Round with 3 Bamboo Leaves | 3×4 · 3p | 1 studs · no anti-studs |  |
 | 37695 | Plant Stem with 3 Leaves with Bar and Pin Holes | 2×2 · 3.96p | smooth |  |
 | 98262 | Plant Flower 2 x 2 with Solid Stud | 2×2 · 3p | 1 studs | flower 2×2 |
-| 3741a | Plant Flower Stem | 2×1 · 5.64p | 1 studs · no anti-studs |  |
+| 3741a | Plant Flower Stem | 2×1 · 5.14p | 1 studs · no anti-studs |  |
 | 6064b | Plant Bush | 4×4 · 13p | 1 studs | bush |
 
 ## Animals
@@ -344,15 +345,15 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | id | part | size | top | note |
 |---|---|---|---|---|
 | 2546 | Animal Bird Parrot | 1×1 · 9.22p | smooth · no anti-studs |  |
-| 11602 | Animal Cat Sitting | 2×2 · 6.71p | smooth · no anti-studs |  |
-| 13665 | Animal Bird Crow | 3×2 · 3.17p | smooth · no anti-studs |  |
+| 11602 | Animal Cat Sitting | 2×2 · 6.71p | smooth |  |
+| 13665 | Animal Bird Crow | 3×2 · 3.17p | smooth |  |
 | 30238 | Animal Spider | 3×2 · 2p | smooth |  |
 | 33122 | Animal Starfish | 3×2 · 2p | 1 studs |  |
-| 33320 | Animal Frog | 1×1 · 2.83p | smooth · no anti-studs |  |
-| 64648 | Animal Fish Straight | 1×3 · 3.19p | smooth · no anti-studs |  |
+| 33320 | Animal Frog | 1×1 · 2.83p | smooth |  |
+| 64648 | Animal Fish Straight | 1×3 · 3.19p | smooth |  |
 | 2546p01 | Animal Bird Parrot with White Face and Yellow/Green Wings Pattern | 1×1 · 9.22p | smooth · no anti-studs |  |
-| 12891p01 | Animal Bird Seagull with Bright Light Orange Beak and Black and Light Bluish Grey Wings Pattern | 3×3 · 5.78p | smooth · no anti-studs |  |
-| 13786p03 | Animal Cat Standing Looking Forward with Yellow Eyes and Dark Bluish Grey Nose and Mouth Pattern | 1×2 · 7.67p | smooth · no anti-studs |  |
+| 12891p01 | Animal Bird Seagull with Bright Light Orange Beak and Black and Light Bluish Grey Wings Pattern | 3×3 · 5.78p | smooth |  |
+| 13786p03 | Animal Cat Standing Looking Forward with Yellow Eyes and Dark Bluish Grey Nose and Mouth Pattern | 1×2 · 7.67p | smooth |  |
 | 26078p01 | Animal Dog Terrier with Black Eyes and Nose and Light Bluish Grey Fur Lines Pattern | 1×3 · 6.78p | smooth |  |
 
 ## Vehicles
@@ -391,14 +392,14 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 3878 | Minifig Top Hat | 2×2 · 2.63p | smooth · no anti-studs |  |
 | 3896 | Minifig Helmet Castle with Chin-Guard | 2×2 · 5.12p | smooth · no anti-studs |  |
 | 3899 | Minifig Cup | 1×2 · 3p | smooth |  |
-| 3900 | Minifig Signal Holder | 1×3 · 0.75p | 1 studs · no anti-studs |  |
+| 3900 | Minifig Signal Holder | 1×3 · 1p | 1 studs · no anti-studs |  |
 | 3901 | Minifig Hair Male | 1×1 · 3.01p | smooth |  |
 | 4006 | Minifig Tool Spanner/Screwdriver | 1×1 · 9.05p | smooth · no anti-studs |  |
-| 4079 | Minifig Seat 2 x 2 | 2×2 · 6p | 2 studs · no anti-studs |  |
+| 4079 | Minifig Seat 2 x 2 | 2×2 · 6p | 2 studs |  |
 | 4497 | Minifig Spear with Round End | 1×1 · 18.25p | smooth · no anti-studs |  |
 | 4523 | Minifig Container D-Basket | 2×2 · 4p | smooth |  |
-| 4528 | Minifig Frypan | 1×2 · 1.5p | smooth · no anti-studs |  |
-| 4529 | Minifig Saucepan | 1×2 · 3p | smooth · no anti-studs |  |
+| 4528 | Minifig Frypan | 1×2 · 1.5p | smooth |  |
+| 4529 | Minifig Saucepan | 1×2 · 3p | smooth |  |
 | 4530 | Minifig Hair Shoulder Length | 2×1 · 3.71p | smooth · no anti-studs |  |
 | 6131 | Minifig Wizards Hat | 3×3 · 4.86p | smooth |  |
 | 6246 | Minifig Tool Mechanical, 6 on Sprue | 8×8 · 2.38p | smooth · no anti-studs |  |
@@ -435,4 +436,4 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 
 | id | part | size | top | note |
 |---|---|---|---|---|
-| 3811 | Baseplate 32 x 32 | 32×32 · 0.5p | 1024 studs | baseplate 32×32 (thin; prefer kit.base) |
+| 3811 | Baseplate 32 x 32 | 32×32 · 1p | 1024 studs · no anti-studs | baseplate 32×32 (thin; prefer kit.base) |

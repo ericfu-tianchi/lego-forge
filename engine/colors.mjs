@@ -22,7 +22,7 @@ export const COLORS = {
   // metallic
   'Pearl Gold': [297, '#AA7F2E'], 'Flat Silver': [315, '#898788'], 'Pearl Dark Gray': [148, '#575857'],
   // transparent
-  'Trans Clear': [47, '#FCFCFC', 0.45], 'Trans Light Blue': [43, '#AEEFEC', 0.55], 'Trans Dark Blue': [33, '#0020A0', 0.55], 'Trans Red': [36, '#C91A09', 0.6],
+  'Trans Clear': [47, '#D9ECF2', 0.5], 'Trans Light Blue': [43, '#AEEFEC', 0.55], 'Trans Dark Blue': [33, '#0020A0', 0.55], 'Trans Red': [36, '#C91A09', 0.6],
   'Trans Orange': [57, '#F08F1C', 0.6], 'Trans Yellow': [46, '#F5CD2F', 0.6], 'Trans Green': [34, '#237841', 0.6], 'Trans Bright Green': [35, '#56E646', 0.6],
   'Trans Black': [40, '#635F52', 0.6], 'Trans Pink': [45, '#FC97AC', 0.6], 'Trans Purple': [52, '#A5A5CB', 0.6], 'Trans Neon Green': [42, '#C0FF00', 0.6],
 };

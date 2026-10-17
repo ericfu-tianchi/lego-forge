@@ -27,14 +27,16 @@ export class Model {
     const p = { id: def.id, x, y, z, rot: ((rot % 4) + 4) % 4, color: c, tag: this.tag, group: this.groupId, line: callerLine() };
     this.parts.push(p); return p;
   }
-  /** Sized basics, the size given as x-extent × z-extent ('2x4' runs 2 studs along x and 4 along z). */
-  brick(size, x, y, z, color) { return this.sized('brick', size, x, y, z, color); }
-  plate(size, x, y, z, color) { return this.sized('plate', size, x, y, z, color); }
-  tile(size, x, y, z, color) { return this.sized('tile', size, x, y, z, color); }
-  sized(kind, size, x, y, z, color) {
-    const [a, b] = String(size).split('x').map(Number); const key = a <= b ? `${a}x${b}` : `${b}x${a}`; const id = SIZES[kind][key];
+  /** Plain bricks, plates and tiles by their LEGO name: '1x4', '2x4', '2x2'. rot 0 lays the long side along x (left–right), rot 1 along z
+   *  (front–back). x, z are still the min corner of the footprint. */
+  brick(size, x, y, z, color, rot = 0) { return this.sized('brick', size, x, y, z, color, rot); }
+  plate(size, x, y, z, color, rot = 0) { return this.sized('plate', size, x, y, z, color, rot); }
+  tile(size, x, y, z, color, rot = 0) { return this.sized('tile', size, x, y, z, color, rot); }
+  sized(kind, size, x, y, z, color, rot = 0) {
+    const [a, b] = String(size).toLowerCase().split('x').map(Number); const key = a <= b ? `${a}x${b}` : `${b}x${a}`; const id = SIZES[kind][key];
     if (!id) { this.errors.push(`no ${kind} ${size} — available: ${Object.keys(SIZES[kind]).join(', ')}`); return null; }
-    const def = partDef(id); return this.part(id, x, y, z, color, def.w === a ? 0 : 1);
+    const def = partDef(id); const longAlongX = def.w >= def.d;   // the catalogue orientation of this part
+    return this.part(id, x, y, z, color, (rot % 2 === 0) === longAlongX ? 0 : 1);
   }
   /** Fill a box with bricks/plates/tiles: w × d studs, h plates (bricks need h a multiple of 3 to stay bricks). The packer staggers the joints.
    *  opts.hollow leaves the inside empty (walls one stud thick); opts.top: 'tile' caps the top layer with tiles. */

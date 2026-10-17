@@ -51,7 +51,7 @@ Use these names (case and spaces do not matter; "grey" = "gray"). A good set use
 | Pearl Gold | 297 | `#AA7F2E` |
 | Flat Silver | 315 | `#898788` |
 | Pearl Dark Gray | 148 | `#575857` |
-| Trans Clear | 47 | `#FCFCFC` (transparent) |
+| Trans Clear | 47 | `#D9ECF2` (transparent) |
 | Trans Light Blue | 43 | `#AEEFEC` (transparent) |
 | Trans Dark Blue | 33 | `#0020A0` (transparent) |
 | Trans Red | 36 | `#C91A09` (transparent) |

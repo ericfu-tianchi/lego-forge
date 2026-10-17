@@ -34,6 +34,9 @@ Create the set: `node bin/lego.mjs new <name>` → `sets/<name>/brief.md` and `b
 desktop or a modern laptop?). Put everything in **one message**: the brief as you plan it, the 1–3 questions with your proposed default
 for each. If the request is clear, do not ask — say what you are building and build it. Never more than two rounds of questions in total.
 
+**From words only**: you are your own reference. Before the brief, write down what the real thing looks like — its parts, proportions
+(width : depth : height), materials and colours, the details people remember. If you have a web search or image tool, look at 2–3 photos.
+
 **From a picture**: look at it carefully before writing the brief. Write down the proportions you can measure (width : depth : height of the
 main masses, in pixels → studs), counts (windows, columns, floors), colours, and what cannot be seen (the back) and how you will handle it.
 Keep the reference image in the set folder; you will compare against it in step 5.
@@ -56,6 +59,7 @@ on a smooth tile, or on the sloped face of a slope).
 ### Step 5 · Review — look at your own renders, critically
 `node bin/lego.mjs shots <name>` → `out/sheet.png` (six views) and `out/hero.png`. **Open and look at both images every round.**
 Close-ups: `shots <name> --only <section>` renders one section alone. With a picture: `--ref <image> --view <angle>` → `out/compare.png`.
+(Shots you take during the blockout don't count as review rounds.)
 1. **Critique first**: write in `brief.md` at least five concrete problems you can see ("the left wall is a blank 10×12 white surface",
    "the tower is thinner than the door is wide", "the rock is a stepped rectangle"). Builders always rate their own work too high —
    assume a strict LEGO designer is looking.
@@ -112,6 +116,8 @@ rocks, plants, a figure or two — not filler. A minifig-scale building is at le
    only plain bricks looks like a blockout (the checker warns below 12% specialty parts; good sets are 25–50%).
 5. **Life and story** (minifig scale): 1–3 minifigures each doing something legible, a few plants, one or two props. Not a crowd.
 6. **One structure**: everything connects; no floating details. Gaps for a minifigure (doors, paths) are at least 2 studs wide.
+   A minifigure needs room: keep 1 stud clear on each side of its 2×1 footprint (its arms) and nothing above it for 4 bricks.
+   (Only a vehicle on its own wheels may stand loose, as a parked car would.)
 7. **Economy**: hollow interiors (`box(..., { hollow: true })`), large plates for floors, no solid fill that cannot be seen.
 
 ## 6. The build script (`build.mjs`)
@@ -135,14 +141,16 @@ export default m;
 |---|---|
 | `new Model({ title, subtitle, budget: [min, max] })` | the set |
 | `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
-| `m.brick(size, x, y, z, color)` · `m.plate(…)` · `m.tile(…)` | a plain part; `size` = x-extent × z-extent, e.g. `'2x4'` runs 4 studs along z |
+| `m.brick(size, x, y, z, color, rot)` · `m.plate(…)` · `m.tile(…)` | a plain part by its LEGO size; rot 0 = long side along x, rot 1 = along z |
 | `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'tile'` = finish the top with tiles (on a hollow box the lid is made solid underneath) |
 | `m.cut(x, y, z, w, d, h)` | removes box() volume from a region (openings, inlays) — order does not matter, it applies to every box |
 | `m.section(tag, fn)` | groups parts (shown in check messages; `shots --only tag` renders just that section) |
 | `m.rigid(fn)` | parts that are one unit (as kits use); rarely needed |
 
 `box()` volumes are turned into real bricks after build.mjs runs. Parts placed with `part()` and box volumes may not overlap — cut the box.
-Sizes for `brick/plate/tile` are **x-extent × z-extent**: a 6-long tile running left–right is `m.tile('6x1', …)`, front–back `m.tile('1x6', …)`.
+`brick/plate/tile` take the LEGO name of the size (`'1x4'`, `'2x6'` — order doesn't matter) and a `rot`: **rot 0 lays the long side
+left–right (along x), rot 1 front–back (along z)**. `m.plate('1x6', 3, 1, 0, 'Tan')` runs from x 3 to 8; `m.plate('1x6', 3, 1, 0, 'Tan', 1)` from z 0 to 5.
+To see any part's studs and anti-studs from above: `node bin/lego.mjs part <id>`.
 Tiles have no studs on top: nothing can be built on them (that is the point). Studs only connect to a part whose bottom is exactly on them.
 A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15573, 87580) under it.
 
@@ -162,12 +170,16 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.water(m, { x, y, z, w, d, color, glint })` | water: smooth tiles with glints (lay it on the base) |
 | `kit.rocks(m, { x, y, z, w, d, h, colors, seed })` | an irregular rock outcrop (h a multiple of 3); never build rocks as stepped boxes |
 | `kit.roundTower(m, { x, y, z, h, size: 2∣4, bands })` | a round tower of round bricks; `bands` repeats colours course by course |
-| `kit.wheels(m, { x, y, z, rot, color })` | an axle with wheels under a 4×2 mudguard (y = 2 puts the tyres on the ground); returns the level to build the body on |
+| `kit.wheels(m, { x, y, z, rot, color })` | an axle with wheels under a 4×2 mudguard; y = the surface the tyres stand on (0, or a base's top); returns the level to build the body on. A vehicle may stand loose on a base |
+| `kit.island(m, { x, y, z, w, d, h, sand, rock, plateau: { x, z, w, d }, plateauY })` | an island or hill: irregular outline, sand rim, rock relief, a flat terrace to build on. Lay `kit.water` first, then the island over it (later volumes replace earlier ones) |
+| `kit.palm(m, { x, y, z, h })` | a palm tree on one stud |
+| `kit.parasol(m, { x, y, z, canopy })` | a beach parasol on a 2×2 foot |
 | `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included) |
 
 ## 7. Checker messages and what they mean
 - **passes through** — two parts occupy the same space. Move one; or you placed a part *and* a box volume in the same cells (cut the box).
-- **not connected to the rest of the set** — it sits on nothing, on a tile (smooth top), on the sloped face of a slope, between plate levels,
+  Collision is checked per stud column: under an arch's opening or a slope's low side there is room; elsewhere a part fills its whole footprint.
+- **not connected to the rest of the set** — the message lists the parts of the loose group. It sits on nothing, on a tile (smooth top), on the sloped face of a slope, between plate levels,
   or on studs that don't line up with its underside. Put it exactly on top of studs.
 - **no anti-studs underneath** — that part cannot sit on studs at all (clips, bars). Use another part.
 - **off the stud grid / between plate levels** — x, z must be whole studs, y whole plates.

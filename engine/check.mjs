@@ -31,7 +31,7 @@ export function check(model) {
   for (const i of freeIdx) { const A = R[i].aabb;
     for (let j = 0; j < parts.length; j++) { if (j === i || sameGroup(parts[i], parts[j])) continue; const r = R[j];
       const hits = r.free ? boxHit(A, r.aabb) : r.cols.some(([x, z, a, b]) => boxHit(A, [x - 0.5, a * 0.4, z - 0.5, x + 0.5, b * 0.4, z + 0.5]));
-      if (hits && (r.free ? i < j : true)) { const k = i < j ? `${i}|${j}` : `${j}|${i}`; if (clash.has(k)) continue; clash.add(k); add('error', i, `${label(parts[i])} passes through ${label(parts[j])} (${where(parts[j])})`, 'two parts cannot share space — move one, or leave more room around it'); } } }
+      if (hits && (r.free ? i < j : true)) { const k = i < j ? `${i}|${j}` : `${j}|${i}`; if (clash.has(k)) continue; clash.add(k); const fig = /^Minifig/.test(partDef(parts[i].id).name) || /^Minifig/.test(partDef(parts[j].id).name); add('error', i, `${label(parts[i])} passes through ${label(parts[j])} (${where(parts[j])})`, fig ? 'a minifigure needs room: its arms and hands reach half a stud past its 2×1 footprint on each side, and its head is 4 bricks up — keep 1 stud clear beside it and nothing over it' : 'two parts cannot share space — move one, or leave more room around it'); } } }
 
   // ---- connections: a stud of a part below plugs into an anti-stud of a part whose bottom is exactly at the stud's base
   const adj = parts.map(() => new Set()); const link = (a, b) => { adj[a].add(b); adj[b].add(a); };
@@ -46,11 +46,15 @@ export function check(model) {
   for (let s = 0; s < parts.length; s++) { if (comp[s] >= 0) continue; const st = [s]; comp[s] = n; let c = 0; while (st.length) { const a = st.pop(); c++; for (const b of adj[a]) if (comp[b] < 0) { comp[b] = n; st.push(b); } } sizes.push(c); n++; }
   const main = sizes.indexOf(Math.max(...sizes));
   const loose = new Map(); parts.forEach((p, i) => { if (comp[i] !== main) { if (!loose.has(comp[i])) loose.set(comp[i], []); loose.get(comp[i]).push(i); } });
+  const isTyre = (p) => /^Tyre/.test(partDef(p.id).name);
   for (const list of loose.values()) {
+    // a vehicle standing on its tyres is allowed to be a separate piece (a car is parked, not glued) — if a tyre rests on a surface
+    if (list.some((j) => isTyre(parts[j]))) { const rests = list.some((j) => isTyre(parts[j]) && restsOnSomething(R[j], R, list)); if (rests) { add('info', list[0], `a vehicle of ${list.length} parts stands on its own wheels (allowed)`, ''); continue; } }
     const i = list[0]; const what = list.length === 1 ? label(parts[i]) : `${list.length} parts (${label(parts[i])} …)`;
     const onGround = list.some((j) => !parts[j].free && parts[j].y === 0);
-    add('error', i, `${what} ${list.length === 1 ? 'is' : 'are'} not connected to the rest of the set${onGround ? ' (standing loose on the table)' : ''}`,
-      R[i].female.length || R[i].free ? 'put it on studs: its bottom must sit exactly on top of a part below, over that part\'s studs' : 'this part has no anti-studs underneath — it can only hang on a clip or bar; use a different part');
+    const members = list.length > 1 ? '\n    the group: ' + list.slice(0, 6).map((j) => `${partDef(parts[j]?.id)?.name.split(' ').slice(0, 3).join(' ')} (${where(parts[j])})`).join('; ') + (list.length > 6 ? ` … +${list.length - 6}` : '') : '';
+    add('error', i, `${what} ${list.length === 1 ? 'is' : 'are'} not connected to the rest of the set${onGround ? ' (standing loose on the table)' : ''}${members}`,
+      R[i].female.length || R[i].free ? 'find where this group should rest on the main build: its bottom must sit exactly on studs of a part below (not on a tile, not between plate levels). A group made of side-by-side pieces with no piece bridging them falls apart: overlap the joints' : 'this part has no anti-studs underneath — it cannot sit on studs; use a different part');
   }
 
   // ---- size and character
@@ -62,9 +66,13 @@ export function check(model) {
   if (special < 0.25 && parts.length > 100) add('warn', null, `only ${(special * 100).toFixed(0)}% of the parts are not plain bricks/plates (good sets: 25–50%)`, 'use slopes, tiles, round parts, windows, plants and details: they are what make a set look designed');
   if (st.colors > 9) add('warn', null, `${st.colors} main colours (each ≥ 3% of the parts) — busy`, 'a strong set uses 4–8 colours');
   const errors = issues.filter((x) => x.level === 'error').length;
-  return { ok: errors === 0, errors, warnings: issues.length - errors, issues, stats: { ...st, specialShare: +special.toFixed(2), components: n } };
+  { const cnt = new Map(); for (const p of parts) cnt.set(p.color, (cnt.get(p.color) ?? 0) + 1); st.palette = [...cnt].sort((a, b) => b[1] - a[1]).map(([c, n]) => `${c} ${Math.round((n / parts.length) * 100)}%`); }
+  return { ok: errors === 0, errors, warnings: issues.filter((x) => x.level === 'warn').length, issues, stats: { ...st, specialShare: +special.toFixed(2), components: n } };
 }
 const sameGroup = (a, b) => !!a.group && a.group === b.group;
+/** does a part's bottom rest on a top surface of a part outside its own group (or on the table)? */
+function restsOnSomething(r, R, own) { const y = r.aabb[1]; if (y < 0.05) return true; const inGroup = new Set(own);
+  return R.some((q, j) => !inGroup.has(j) && !q.free && Math.abs(q.aabb[4] - y) < 0.12 && Math.min(q.aabb[3], r.aabb[3]) > Math.max(q.aabb[0], r.aabb[0]) && Math.min(q.aabb[5], r.aabb[5]) > Math.max(q.aabb[2], r.aabb[2])); }
 const boxHit = (A, B) => Math.min(A[3], B[3]) - Math.max(A[0], B[0]) > HSKIN && Math.min(A[5], B[5]) - Math.max(A[2], B[2]) > HSKIN && Math.min(A[4], B[4]) - Math.max(A[1], B[1]) > VSKIN * 0.4;
 /** the tube between four anti-stud cells of a 2-wide part takes a stud too */
 const tube = (f, x, z) => [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]].every(([a, b]) => f.some(([fx, fz]) => Math.abs(fx - (x + a)) < EPS && Math.abs(fz - (z + b)) < EPS));
@@ -72,8 +80,9 @@ export function label(p) { const d = partDef(p.id); return `${d ? d.name.replace
 export function where(p) { return `${p.line ? p.line + ' ' : ''}${p.free ? 'kit' : `at x ${p.x} y ${p.y} z ${p.z}${p.rot ? ` rot ${p.rot}` : ''}`}${p.tag ? ` · ${p.tag}` : ''}`; }
 export function report(res) {
   const L = [`${res.ok ? 'PASS' : 'FAIL'} · ${res.stats.parts} parts · ${res.stats.types} kinds · ${res.stats.colors} build colours · ${Math.round(res.stats.specialShare * 100)}% specialty parts · ${res.errors} errors · ${res.warnings} warnings`];
-  const shown = res.issues.slice(0, 40);
+  L.push(`colours by share: ${res.stats.palette.slice(0, 12).join(' · ')}`);
+  const shown = res.issues.filter((x) => x.level !== 'info').slice(0, 40); for (const x of res.issues.filter((x) => x.level === 'info')) L.push(`· ${x.msg}`);
   for (const x of shown) L.push(`${x.level === 'error' ? '✗' : '!'} ${x.msg}${x.where ? `\n    ${x.where}` : ''}${x.hint ? `\n    → ${x.hint}` : ''}`);
-  if (res.issues.length > shown.length) L.push(`… and ${res.issues.length - shown.length} more`);
+  const rest = res.issues.filter((x) => x.level !== 'info').length - shown.length; if (rest > 0) L.push(`… and ${rest} more`);
   return L.join('\n');
 }

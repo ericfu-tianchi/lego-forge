@@ -23,7 +23,7 @@ export function window(m, { x, y, z, rot = 0, size = '1x2x2', frame = 'White', g
   let host; m.rigid(() => { host = m.part(fid, x, y, z, frame, rot); if (host) rider(m, host, gid, glass, gOff); });
   if (sill) {   // a 2-deep plate under the frame: one row in the wall, one sticking out on the outside face (rot 0 → +z, 1 → +x, 2 → −z, 3 → −x)
     const n = Math.max(fw, fd); m.cut(x, y - 1, z, fw, fd, 1);
-    const [sx, sz] = [[x, z], [x, z], [x, z - 1], [x - 1, z]][rot]; m.plate(rot % 2 === 0 ? `${n}x2` : `2x${n}`, sx, y - 1, sz, sill);
+    const [sx, sz] = [[x, z], [x, z], [x, z - 1], [x - 1, z]][rot]; m.plate(`${n}x2`, sx, y - 1, sz, sill, rot % 2 === 0 ? 0 : 1);
   }
   return host;
 }
@@ -46,12 +46,14 @@ export function roof(m, { x, y, z, w, d, color = 'Dark Bluish Gray', gable, ridg
   const put = (u, v, id, rot, c = color) => { const [px, pz] = along ? [x + u, z + v] : [x + v, z + u]; return m.part(id, px, y + k * 3, pz, c, along ? rot : (rot + 1) % 4); };
   let k = 0;
   // 3039 at rot 0 has its studs on the −z row and slopes down towards +z: the −z course is turned (rot 2) to slope down outwards
+  // runs of 2-wide slopes along the ridge; every other course starts with a 1-wide one so the joints overlap and the courses hold together
+  const runs = (c) => { const r = []; let u = 0; if (c % 2 === 1 && W > 2) { r.push([0, 1]); u = 1; } for (; u < W; u += 2) r.push([u, Math.min(2, W - u)]); return r; };
   for (; D - 2 * k > 2; k++) {
-    for (let u = 0; u < W; u += 2) { const n = Math.min(2, W - u); put(u, k, n === 2 ? '3039' : '3040b', 2); put(u, D - 2 - k, n === 2 ? '3039' : '3040b', 0); }
+    for (const [u, n] of runs(k)) { put(u, k, n === 2 ? '3039' : '3040b', 2); put(u, D - 2 - k, n === 2 ? '3039' : '3040b', 0); }
     if (D - 2 * k > 4) m.box(along ? x : x + k + 2, y + k * 3, along ? z + k + 2 : z, along ? W : D - 4 - 2 * k, along ? D - 4 - 2 * k : W, 3, gable);
   }
   const rest = D - 2 * k;   // 1 or 2 studs left under the ridge
-  for (let u = 0; u < W; u += 2) { const n = Math.min(2, W - u); put(u, k, n === 2 ? '3043' : '3044b', 0); }
+  for (const [u, n] of runs(k)) put(u, k, n === 2 ? '3043' : '3044b', 0);
   return y + (k + 1) * 3;
 }
 
@@ -123,19 +125,21 @@ export function base(m, { x = 0, y = 0, z = 0, w, d, color = 'Green', under = 'D
 
 // ---- vehicles -----------------------------------------------------------------------------------------------------------------------
 /** An axle with two wheels under a 4×2 mudguard: the wheel-holder plate (pins one stud out each side), a rim and tyre on each pin, and the
- *  mudguard (arches over the wheels) on top. x, z = the mudguard's 4×2 position (x..x+4 at rot 0); y = the holder's level — 2 puts the
- *  tyres on the ground. Returns the level of the mudguard's top (y + 3): build the car body from there. rot 0: axle along x (car runs along z). */
-export function wheels(m, { x, y, z, rot = 0, color = 'Red', tyre = 'Black', rim = 'Light Bluish Gray' }) {
+ *  mudguard (arches over the wheels) on top. x, z = the mudguard's 4×2 position (x..x+4 at rot 0); y = the level the tyres stand on
+ *  (0 = the table, or the top of a base). Returns the level of the mudguard's top (y + 5): build the car body from there.
+ *  rot 0: axle along x (the car runs along z); rot 1: axle along z. A vehicle may stand loose on a base: it needs no studs under it. */
+export function wheels(m, { x, y = 0, z, rot = 0, color = 'Red', tyre = 'Black', rim = 'Light Bluish Gray' }) {
+  const hy = y + 2;   // the holder sits 2 plates up so the tyres touch the surface
   m.rigid(() => {
-    const along = rot % 2 === 0; const host = m.part('4600', along ? x + 0.5 : x, y, along ? z : z + 0.5, 'Black', along ? 0 : 1); if (!host) return;
+    const along = rot % 2 === 0; const host = m.part('4600', along ? x + 0.5 : x, hy, along ? z : z + 0.5, 'Black', along ? 0 : 1); if (!host) return;
     for (const s of [1, -1]) { const off = ld(30 * s, 6, 0, 0, 0, -s, 0, 1, 0, s, 0, 0); rider(m, host, '4624', rim, off); rider(m, host, '3641', tyre, off); }
-    m.part('3788', x, y + 1, z, color, along ? 0 : 1);
-  }); return y + 3;
+    m.part('3788', x, hy + 1, z, color, along ? 0 : 1);
+  }); return hy + 3;
 }
 
 // ---- landscape -----------------------------------------------------------------------------------------------------------------------
 /** Water over a rectangle: smooth tiles (no studs) with a few round tiles as glints. Lay it on a base (y = the base's top). */
-export function water(m, { x, y, z, w, d, color = 'Dark Azure', glint = 'Medium Azure', glints = 0.08 }) {
+export function water(m, { x, y, z, w, d, color = 'Dark Azure', glint = 'Medium Azure', glints = 0.04 }) {
   const rnd = m.rand; const cells = [];
   for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) if (rnd() < glints) cells.push([x + i, z + k]);
   for (const [cx, cz] of cells) { m.cut(cx, y, cz, 1, 1, 1); m.part('98138', cx, y, cz, glint); }
@@ -178,6 +182,40 @@ export function bench(m, { x, y, z, rot = 0, color = 'Reddish Brown', legs = 'Bl
   m.rigid(() => {
     const at = (u, v) => (rot % 2 === 0 ? [x + u, z + v] : [x + v, z + u]);
     for (const u of [0, 3]) { const [a, b] = at(u, 0); m.part('3062b', a, y, b, legs); }
-    const [sx, sz] = at(0, 0); m.tile(rot % 2 === 0 ? '4x1' : '1x4', sx, y + 3, sz, color);
+    const [sx, sz] = at(0, 0); m.tile('1x4', sx, y + 3, sz, color, rot % 2);
   });
+}
+
+/** A palm tree on one stud: a slim trunk of round bricks in two browns, crowned with two layers of leaves and a small cap. */
+export function palm(m, { x, y, z, h = 18, trunk = ['Reddish Brown', 'Dark Tan'], leaves = 'Green', leaves2 = 'Bright Green' }) {
+  let t = y; m.rigid(() => {
+    for (let i = 0; t < y + h; i++) { m.part('3062b', x, t, z, trunk[i % trunk.length]); t += 3; }
+    const cx = x + 0.5, cz = z + 0.5;
+    for (const [rot, c] of [[0, leaves], [1, leaves2]]) { const [lx, lz] = onStud('2417', rot, 0, -0.5, cx, cz); m.part('2417', lx, t, lz, c, rot); t += 1; if (rot === 0) { m.part('6141', x, t, z, trunk[0]); t += 1; } }
+    m.part('6141', x, t, z, leaves); t += 1;
+  }); return t;
+}
+/** A beach parasol: a round foot, a pole of round bricks on its centre, a 4×4 dish canopy. The canopy spans 4×4 studs around (x+1, z+1). */
+export function parasol(m, { x, y, z, h = 12, pole = 'White', canopy = 'Red', foot = 'White' }) {
+  let t = y; m.rigid(() => {
+    m.part('4032a', x, t, z, foot); t += 1; m.part('87580', x, t, z, foot); t += 1;      // 2×2 round foot, jumper: one stud on the centre
+    for (; t < y + h; t += 3) m.part('3062b', x + 0.5, t, z + 0.5, pole);
+    m.part('3960', x - 1, t, z - 1, canopy); t += 2; m.part('4589', x + 0.5, t, z + 0.5, canopy); t += 3;
+  }); return t;
+}
+/** An island or a hill: an irregular rounded outline over w × d studs, a sand rim, rock rising to h plates (a multiple of 3), with a flat
+ *  terrace (plateau: { x, z, w, d } in model coordinates, at plateauY plates above y) to build on. Water first, then the island. */
+export function island(m, { x, y, z, w, d, h = 9, sand = 'Tan', rock = ['Dark Bluish Gray', 'Light Bluish Gray'], plateau, plateauY = 3, seed = 2 }) {
+  const noise = (i, k) => { const v = Math.sin(i * 12.99 + k * 78.23 + seed * 3.7) * 43758.5; return v - Math.floor(v); };
+  const cx = (w - 1) / 2, cz = (d - 1) / 2;
+  const r = (i, k) => Math.hypot((i - cx) / (w / 2), (k - cz) / (d / 2)) + (noise(i >> 1, k >> 1) - 0.5) * 0.25;
+  const inP = (X, Z) => plateau && X >= plateau.x && X < plateau.x + plateau.w && Z >= plateau.z && Z < plateau.z + plateau.d;
+  for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) {
+    const rr = r(i, k); if (rr > 1) continue; const X = x + i, Z = z + k;
+    if (inP(X, Z)) { m.box(X, y, Z, 1, 1, plateauY, rock[0], { unit: 'plateau' }); continue; }
+    if (rr > 0.78) { m.box(X, y, Z, 1, 1, 1, sand, { kind: 'plate', unit: 'sand' }); continue; }     // the beach ring
+    const hh = Math.max(3, Math.min(h, Math.round(((1 - rr) / 0.78) * h * (0.8 + noise(i, k) * 0.4) / 3) * 3));
+    const c = rock[noise((i >> 1) + 5, (k >> 1) + 1) < 0.65 ? 0 : 1];
+    m.box(X, y, Z, 1, 1, hh, c, { unit: `isl${i >> 1},${k >> 1}` });
+  }
 }
