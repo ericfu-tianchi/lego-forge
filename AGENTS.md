@@ -1,0 +1,156 @@
+# LEGO Forge — instructions for the agent
+
+You turn an idea (a sentence, or a picture) into **one LEGO set**: a model made only of real LEGO parts, every part held on real studs,
+shown in a page where it turns, takes apart and rebuilds itself. The user gets `sets/<name>/out/set.html` (open in any browser),
+plus `model.ldr` (opens in BrickLink Studio) and `parts.csv`.
+
+**The bar is a set someone would be proud to put on a shelf**, not a pile of bricks that passes a test: the subject is recognisable at a
+glance, the proportions are right, it looks designed. Target **300–1,500 parts** (hard limit 2,000).
+
+Read this file once, completely, before you start. The parts list is `docs/PARTS.md`, colours `docs/COLORS.md`, the review rubric `docs/RUBRIC.md`.
+
+---
+
+## 0. Setup (once)
+```
+npm install
+npx playwright install chromium      # for review images; skip if it fails and say so to the user
+```
+
+## 1. The pipeline — follow it in order
+
+### Step 1 · Brief (and at most one round of questions)
+Create the set: `node bin/lego.mjs new <name>` → `sets/<name>/brief.md` and `build.mjs`. Fill in the brief:
+- **Subject** in one sentence, and the **scale** (§3).
+- **Signature features**: the 3–5 things that make this subject recognisable (a red phone box: the crown on top, the long glazed sides, the
+  white "TELEPHONE" band; a retro PC: beige case, deep CRT monitor, keyboard, floppy slot). Everything else is secondary.
+- **Size**: footprint in studs, height in plates, part target.
+- **Palette**: 4–8 colours from the real thing (§4).
+- **Out**: what you leave out on purpose.
+
+**Questions.** Ask the user only when an answer would change the result a lot *and* cannot be inferred ("a computer" — a 1980s beige
+desktop or a modern laptop?). Put everything in **one message**: the brief as you plan it, the 1–3 questions with your proposed default
+for each. If the request is clear, do not ask — say what you are building and build it. Never more than two rounds of questions in total.
+
+**From a picture**: look at it carefully before writing the brief. Write down the proportions you can measure (width : depth : height of the
+main masses, in pixels → studs), counts (windows, columns, floors), colours, and what cannot be seen (the back) and how you will handle it.
+Keep the reference image in the set folder; you will compare against it in step 5.
+
+### Step 2 · Blockout
+In `build.mjs`, build the big masses only, as plain `m.box(...)` volumes at the right footprint and height, on a base if it is a scene.
+`node bin/lego.mjs build <name>` then `node bin/lego.mjs shots <name>` and look at `out/sheet.png`.
+**Get the proportions and silhouette right now** — it is cheap here and expensive later. With a picture: `shots <name> --ref <image> --view front|hero|…`
+puts the reference beside the render (`out/compare.png`).
+
+### Step 3 · Detail
+Turn the blocks into a model: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
+texture and life (§5). Use `docs/PARTS.md` and `node bin/lego.mjs parts <words>` to find parts. Build in sections (`m.section('tower', () => …)`).
+
+### Step 4 · Check — must PASS
+`node bin/lego.mjs build <name>` runs the checker. **0 errors** before you continue. Every message says what is wrong, where (line of
+build.mjs and grid position) and what to do. Fix the cause, not the symptom (a part "not connected" usually sits one plate too high, or
+on a smooth tile, or on the sloped face of a slope).
+
+### Step 5 · Review — look at your own renders
+`node bin/lego.mjs shots <name>` → `out/sheet.png` (six views) and `out/hero.png`. **Open and look at both images every round.**
+Score the set with `docs/RUBRIC.md` honestly (write the scores in `brief.md`). Fix the lowest row first. Repeat steps 3–5 until every row
+is ≥ 7 — **at most 3 review rounds**; then deliver with an honest note of what is still weak.
+
+### Step 6 · Deliver
+Tell the user: what you built (one paragraph), the part count, the file to open (`sets/<name>/out/set.html`), and that `model.ldr`
+opens in BrickLink Studio for building instructions and part ordering.
+
+---
+
+## 2. Coordinates
+```
+        −z (back)
+          ↑
+ −x  ←  (set)  →  +x          x, z: studs (grid columns)       y: plates, up (1 brick = 3 plates)
+          ↓                    a part's x, z = the min corner of its footprint; y = its bottom face
+        +z (front: faces the viewer)
+```
+- `rot` turns a part a quarter at a time about its own centre (0–3). Footprints swap: a 2×4 brick is 4×2 at rot 1.
+- A part sits on another when its `y` equals the top of the one below: a brick at y = 3 sits on a brick at y = 0; a plate at y = 1 sits on a plate at y = 0.
+- The **front is +z**: put the most interesting side there. Figures face the front with rot 0.
+- Half studs (x = 2.5) only where a jumper plate (15573, 87580) or a kit put them.
+
+## 3. Scale — pick one, keep it everywhere
+- **Minifigure scale** (scenes, buildings, vehicles with people): a minifigure is 2×1 studs and ~13 plates tall with hair. A door is 1×4×6
+  (18 plates); a storey is 18–24 plates; a car is 4–6 studs wide; a tree 20–35 plates; a lamp post 15–20 plates.
+- **Display scale** (an object as a model: a computer, a camera, a guitar): the object itself is the set, sized so its key details can be
+  built (often 1:2–1:1 of the real thing for small objects). Every detail is built from parts; nothing is "implied".
+- **Micro scale** (a whole city block, a ship): 1 stud ≈ 1–2 m; windows become tiles and grilles, people are left out.
+Mixing scales (a minifig next to a micro building) is the most common way a set looks wrong.
+
+## 4. Colour
+- 4–8 colours. One main colour (the subject's material), one or two secondary, one or two accents used sparingly (doors, signs, flowers).
+- Take colours from the real thing / the picture, then pick the nearest LEGO colour (`docs/COLORS.md`). Stone is Tan, Light Bluish Gray or
+  Dark Tan; wood is Reddish Brown or Dark Tan; roofs Dark Bluish Gray, Reddish Brown or Dark Red; glass Trans Clear or Trans Light Blue.
+- The base is neutral (Dark Bluish Gray, Tan, Green for grass) so the subject stands out.
+
+## 5. What makes a set look designed (the rubric checks these)
+1. **Signature features built precisely**, at the right proportion and place — if they are wrong, nothing else matters.
+2. **Silhouette and proportion**: compare with the subject; real ratios, compressed only where a part forces it.
+3. **No dead surfaces**: break large walls with windows, pilasters (1×1 round bricks), ledges, a contrasting plinth course, grilles; finish
+   floors, paths and table-tops with **tiles**; leave studs where they read as texture (grass, roofs) and tile where things are smooth.
+4. **Part variety**: slopes for roofs and chamfers, curves for rounded forms, round bricks/plates/cones for columns, lamps, knobs. A set of
+   only plain bricks looks like a blockout (the checker warns below 12% specialty parts; good sets are 25–50%).
+5. **Life and story** (minifig scale): 1–3 minifigures each doing something legible, a few plants, one or two props. Not a crowd.
+6. **One structure**: everything connects; no floating details. Gaps for a minifigure (doors, paths) are at least 2 studs wide.
+7. **Economy**: hollow interiors (`box(..., { hollow: true })`), large plates for floors, no solid fill that cannot be seen.
+
+## 6. The build script (`build.mjs`)
+```js
+import { Model } from '../../engine/model.mjs';
+import * as kit from '../../engine/kit.mjs';
+const m = new Model({ title: 'Corner Bakery', subtitle: 'a two-storey shop on a street corner', budget: [600, 1500] });
+const g = kit.base(m, { w: 32, d: 24, color: 'Dark Bluish Gray' });          // base: returns the plate level of its top (2)
+m.section('shop', () => {
+  m.box(4, g, 6, 16, 10, 18, 'Tan', { hollow: true });                         // walls 16×10, 18 plates (6 bricks), hollow
+  kit.door(m, { x: 10, y: g, z: 15, color: 'Dark Green' });                     // cuts its own opening in the front wall (z = 15)
+  kit.window(m, { x: 5, y: g + 6, z: 15, size: '1x2x3' });
+  m.box(4, g + 18, 6, 16, 10, 1, 'Dark Bluish Gray', { kind: 'plate' });        // floor/roof slab
+  kit.roof(m, { x: 4, y: g + 19, z: 6, w: 16, d: 10, color: 'Reddish Brown' });
+});
+kit.minifig(m, { x: 22, y: g, z: 18, torso: 'apron', shirt: 'White', face: 'smile', hair: 'bob', hairColor: 'Dark Brown' });
+export default m;
+```
+### Model methods
+| call | does |
+|---|---|
+| `new Model({ title, subtitle, budget: [min, max] })` | the set |
+| `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
+| `m.brick(size, x, y, z, color)` · `m.plate(…)` · `m.tile(…)` | a plain part; `size` = x-extent × z-extent, e.g. `'2x4'` runs 4 studs along z |
+| `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` for slabs; `hollow: true` = walls only; `top: 'tile'` = smooth top |
+| `m.cut(x, y, z, w, d, h)` | removes part of a box() volume (openings) — call before the volume is packed (anytime in build.mjs) |
+| `m.section(tag, fn)` | groups parts (shown in check messages; `shots --only tag` renders just that section) |
+| `m.rigid(fn)` | parts that are one unit (as kits use); rarely needed |
+
+`box()` volumes are turned into real bricks after build.mjs runs. Parts placed with `part()` and box volumes may not overlap — cut the box first.
+
+### Kit (`engine/kit.mjs`) — proven sub-builds; use them instead of re-inventing
+| call | builds |
+|---|---|
+| `kit.base(m, { x, z, w, d, color, under })` | a 2-plate base that holds together; returns the top level |
+| `kit.window(m, { x, y, z, rot, size: '1x2x2'∣'1x2x3'∣'1x4x3', frame, glass })` | frame + glass in a wall (cuts its opening). rot 0/2 in walls along x, 1/3 along z |
+| `kit.door(m, { x, y, z, rot, frame, color })` | 1×4×6 door frame + door (cuts its opening; 18 plates tall) |
+| `kit.roof(m, { x, y, z, w, d, color, gable, ridge: 'x'∣'z' })` | a 45° pitched roof over a rectangle; even number of studs across the ridge; returns the top level |
+| `kit.tree(m, { x, y, z, size: 'S'∣'M'∣'L', leaves, cap, trunk })` | a leafy tree on a 2×2 footprint (canopy ~6×6) |
+| `kit.pine(m, { x, y, z, big })` · `kit.bush(…)` · `kit.flower(m, { x, y, z, color })` | moulded plants |
+| `kit.lamp(m, { x, y, z, color, light })` | a street lamp on one stud |
+| `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included) |
+
+## 7. Checker messages and what they mean
+- **passes through** — two parts occupy the same space. Move one; or you placed a part *and* a box volume in the same cells (cut the box).
+- **not connected to the rest of the set** — it sits on nothing, on a tile (smooth top), on the sloped face of a slope, between plate levels,
+  or on studs that don't line up with its underside. Put it exactly on top of studs.
+- **no anti-studs underneath** — that part cannot sit on studs at all (clips, bars). Use another part.
+- **off the stud grid / between plate levels** — x, z must be whole studs, y whole plates.
+- Warnings (budget, specialty share, colour count) are about quality: take them seriously.
+
+## 8. Don'ts
+- Don't invent parts or ids: only `docs/PARTS.md`. Don't use parts your scale cannot read (a 1×1 tile as a "window" at minifig scale).
+- Don't leave the subject on bare studs floating in space: scenes get a base; objects stand on their own feet/bottom.
+- Don't stack everything as solid brick; don't make 2,000 parts of filler.
+- Don't skip looking at the renders. The checker proves it can be built, not that it looks right.

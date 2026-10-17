@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LEGO set</title>
+<style>
+:root{--ink:#1f2124;--mute:#6b6f73;--bg1:#f6f4ef;--bg2:#e7e3da}
+*{box-sizing:border-box}html,body{margin:0;height:100%;overflow:hidden;font-family:-apple-system,"SF Pro Text","Helvetica Neue",Helvetica,Arial,"PingFang SC",sans-serif;color:var(--ink)}
+body{background:radial-gradient(120% 90% at 50% 35%,var(--bg1) 0%,var(--bg2) 100%)}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.card{position:fixed;left:24px;top:22px;pointer-events:none}
+#title{font-size:22px;font-weight:650;letter-spacing:-.01em}
+#sub{font-size:14px;color:var(--mute);margin-top:4px}
+#count{font-size:12px;color:var(--mute);margin-top:10px;letter-spacing:.02em}
+.dock{position:fixed;left:50%;bottom:28px;transform:translateX(-50%);display:flex;gap:10px}
+button{font:inherit;font-size:14px;font-weight:600;border:0;border-radius:999px;padding:12px 22px;background:#1f2124;color:#fff;cursor:pointer;box-shadow:0 6px 18px rgba(0,0,0,.18);transition:transform .15s}
+button:hover{transform:translateY(-1px)}button:disabled{opacity:.5;cursor:default}
+.hint{position:fixed;right:22px;bottom:30px;font-size:12px;color:var(--mute)}
+.still .dock,.still .hint{display:none}
+#labels span{position:fixed;font-size:13px;font-weight:600;color:#6b6f73;font-family:Menlo,monospace}
+.credit{position:fixed;right:22px;top:24px;font-size:11px;color:#9a9ea2}
+.still .credit{display:none}
+@media (max-width:600px){.card{left:16px;top:16px}#title{font-size:18px}.hint{display:none}}
+</style></head>
+<body>
+<canvas id="c"></canvas>
+<div class="card"><div id="title"></div><div id="sub"></div><div id="count"></div></div>
+<div class="dock"><button id="apart">Take apart</button><button id="rebuild" hidden>Rebuild</button></div>
+<div class="hint">Drag to turn · scroll to zoom</div>
+<div class="credit">Real LEGO parts · geometry from LDraw.org (CC BY 2.0)</div>
+<div id="labels"></div>
+<script>window.SET=/*SET*/null;</script>
+<script>/*VIEWER*/</script>
+</body></html>

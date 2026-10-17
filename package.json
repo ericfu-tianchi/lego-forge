@@ -1,0 +1,14 @@
+{
+  "name": "lego-forge",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Turn an idea or a picture into a buildable, take-apart-able LEGO set — a toolkit for coding agents.",
+  "type": "module",
+  "bin": { "lego": "bin/lego.mjs" },
+  "scripts": {
+    "build-viewer": "esbuild viewer/src/viewer.js --bundle --format=iife --minify --outfile=viewer/dist/viewer.js",
+    "bake": "node tools/bake.mjs"
+  },
+  "dependencies": { "three": "0.170.0" },
+  "devDependencies": { "esbuild": "^0.24.0", "playwright": "^1.48.0" }
+}

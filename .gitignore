@@ -1,0 +1,5 @@
+node_modules/
+.ldraw-cache/
+sets/_*/
+sets/*/out/view.png
+.DS_Store
