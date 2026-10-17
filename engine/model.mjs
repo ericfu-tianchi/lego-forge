@@ -41,6 +41,7 @@ export class Model {
   /** Fill a box with bricks/plates/tiles: w × d studs, h plates (bricks need h a multiple of 3 to stay bricks). The packer staggers the joints.
    *  opts.hollow leaves the inside empty (walls one stud thick); opts.top: 'tile' caps the top layer with tiles. */
   box(x, y, z, w, d, h, color, opts = {}) {
+    if (!colorName(color)) { this.errors.push(`unknown colour '${color}' in box() at ${callerLine() || 'kit'} (see docs/COLORS.md)`); return this; }
     for (const c of this.cuts) if (c[1] > y && x < c[0] + c[3] && c[0] < x + w && y < c[1] + c[5] && c[1] < y + h && z < c[2] + c[4] && c[2] < z + d)   // an opening inside a wall built after it
       this.warnings.push(`box() at ${callerLine() || 'kit'} fills space an earlier cut() emptied (${c[6] || 'a kit'}): cuts only remove what was boxed before them — if that opening should stay open, box first and cut after`);
     const kind = opts.kind ?? (h % 3 === 0 ? 'brick' : 'plate'); const capped = opts.hollow && (opts.top || opts.cap);
@@ -81,7 +82,11 @@ export class Model {
     for (const [fn, tag, g] of this.deferred.splice(0)) { const t0 = this.tag, g0 = this.groupId; this.tag = tag; this.groupId = g; try { fn(); } finally { this.tag = t0; this.groupId = g0; } }
     // a part standing on a tiled floor: the tile cells under it become plates (same colour), so it has studs to stand on — the way a
     // builder leaves a stud exposed where a figure or a table goes
-    for (const p of this.parts) { if (p.free) continue; const r = resolveP(p); for (const [fx, fz] of r.female) { const k = `${Math.floor(fx)},${p.y - 1},${Math.floor(fz)}`; const v = this.vox.get(k); if (v && v.kind === 'tile') this.vox.set(k, { ...v, kind: 'plate', unit: (v.unit ?? '') + '~stand' }); } }
+    const tileToPlate = Object.fromEntries(Object.entries(TILE).filter(([k]) => PLATE[k]).map(([k, id]) => [id, PLATE[k]]));
+    const tileParts = this.parts.filter((q) => !q.free && tileToPlate[q.id]);
+    for (const p of this.parts) { if (p.free || tileToPlate[p.id]) continue; const r = resolveP(p); for (const [fx, fz] of r.female) {
+      const k = `${Math.floor(fx)},${p.y - 1},${Math.floor(fz)}`; const v = this.vox.get(k); if (v && v.kind === 'tile') this.vox.set(k, { ...v, kind: 'plate', unit: (v.unit ?? '') + '~stand' });
+      for (const q of tileParts) { if (q.y !== p.y - 1) continue; const d = partDef(q.id); const [fw, fd] = footprint(d, q.rot); if (fx > q.x && fx < q.x + fw && fz > q.z && fz < q.z + fd) q.id = tileToPlate[q.id]; } } }   // a placed tile too
     if (!this.vox.size) return this;
     const layers = new Map(); for (const k of this.vox.keys()) { const [x, y, z] = k.split(',').map(Number); if (!layers.has(y)) layers.set(y, []); layers.get(y).push([x, z]); }
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);
