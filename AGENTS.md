@@ -74,6 +74,9 @@ Close-ups: `shots <name> --only <section>` renders one section alone. With a pic
 3. Fix the lowest row first, then the next. Repeat steps 3–5 until every row is ≥ 7 — **at most 3 review rounds**; then deliver with an
    honest note of what is still weak.
 
+**Do not stop early.** A delivery has: the check PASS, at least 300 parts, at least two review rounds with written critique, and every
+signature feature built. If something blocks you (a kit call fails), simplify that one feature and carry on — never deliver a blockout.
+
 ### Step 6 · Deliver
 Tell the user: what you built (one paragraph), the part count, the file to open (`sets/<name>/out/set.html`), and that `model.ldr`
 opens in BrickLink Studio for building instructions and part ordering.
@@ -204,6 +207,7 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.casing(m, { x, y, z, w, d, h, color, trim, panel: { color, rows, from }, buttons: [colours] })` | **a display-scale appliance body** (espresso machine, radio, console…): feet, hollow body, rounded front top edge, a tiled screen/fascia, buttons. Start objects from this, then add what makes yours recognisable (a portafilter, a dial, a handle) |
 | `kit.vehicle(m, { x, y, z, len, kind: 'car'∣'van'∣'truck'∣'fire'∣'bus', color, accent, glass })` | **a finished road vehicle**, 4 wide, front at +z: wheels, chassis, headlights, grille, tail lights, windscreen, cab or body. Start every vehicle from this, then customise. Returns `{ cabSeat, bed }`; it stands loose on its wheels |
 | `kit.snowman(m, { x, y, z, hat, scarf })` | a snowman on 2×2 |
+| `kit.stairs(m, { x, y, z, w, rise, step, rot, color, tread })` | a flight of stairs (or a stepped ramp) climbing `rise` plates in direction rot; returns the top level |
 | `kit.awning(m, { x, y, z, w, rot, colors, ledge })` | a striped awning: a plate ledge in the wall course at plate level y and slopes reaching out two studs |
 
 **Studs not on top (SNOT).** `kit.sign` and `kit.panel` mount tiles sideways on bricks with studs on their side — the way real sets

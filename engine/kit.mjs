@@ -471,3 +471,20 @@ export function casing(m, { x, y, z, w, d, h = 12, color = 'Light Bluish Gray', 
   return { top: y0 + h, front: z + d - 1 };
 }
 const panelFn = (m, o) => panel(m, { ...o, x: o.xFrom ?? o.x });
+
+/** Stairs: a flight from (x, y, z) climbing `rise` plates, one step per `step` plates (1 or 2), each tread a tile, going in direction
+ *  rot (0 = climbing towards +z … the same facing rule as everything else: rot 0 runs front-wards). w = width across (studs). Each step is
+ *  one stud deep and stands on the one before it (stacked plates), so the flight holds together. Returns the level of the top. */
+export function stairs(m, { x, y, z, w = 2, rise = 6, step = 2, rot = 0, color = 'Light Bluish Gray', tread = 'Tan' }) {
+  const n = Math.ceil(rise / step); const dir = [[0, 1], [1, 0], [0, -1], [-1, 0]][rot];
+  m.rigid(() => {
+    for (let i = 0; i < n; i++) {
+      const sx = x + dir[0] * i, sz = z + dir[1] * i; const h = (i + 1) * step;
+      const [bw, bd] = rot % 2 === 0 ? [w, 1] : [1, w];
+      // a solid column under each step: plates under the tread, its joints staggered with the next step by the packer
+      m.box(rot === 3 ? sx : sx, y, rot === 2 ? sz : sz, bw, bd, h - 1, color, { kind: 'plate', unit: `stair${x},${z},${i}` });
+      m.box(sx, y + h - 1, sz, bw, bd, 1, tread, { kind: 'tile' });
+    }
+  });
+  return y + n * step;
+}
