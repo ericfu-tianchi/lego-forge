@@ -49,7 +49,8 @@ In `build.mjs`, build the big masses only, as plain `m.box(...)` volumes at the 
 puts the reference beside the render (`out/compare.png`).
 
 ### Step 3 · Detail
-Turn the blocks into a model: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
+Turn the blocks into a model. **Buildings: start from `kit.building`** (it gives a correct, detailed structure in one call), then make it
+yours — the details that make *this* building recognisable, its colours, figures and setting. Otherwise: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
 texture and life (§5). Use `docs/PARTS.md` and `node bin/lego.mjs parts <words>` to find parts. Build in sections (`m.section('tower', () => …)`).
 
 ### Step 4 · Check — must PASS
@@ -167,6 +168,7 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 ### Kit (`engine/kit.mjs`) — proven sub-builds; use them instead of re-inventing
 | call | builds |
 |---|---|
+| `kit.building(m, { x, y, z, w, d, floors, wall, plinth, trim, roof: 'gable'∣'flat', roofColor, window, door, shop: { sign, awning, glazing }, chimney })` | **a finished minifig-scale building** — plinth, quoins, windows with sills on every storey, door, storey bands, roof, chimney; `shop` makes the ground floor a shopfront with an awning and a sign. Start every building from this, then customise and add (it returns the storey levels) |
 | `kit.base(m, { x, z, w, d, color, under })` | a 2-plate base that holds together; returns the top level |
 | `kit.window(m, { x, y, z, rot, size: '1x2x2'∣'1x2x3'∣'1x4x3', frame, glass, sill })` | frame + glass in a wall (cuts its opening). rot = the side it looks out of (0 front … 3 left); `sill: colour` adds a sill |
 | `kit.door(m, { x, y, z, rot, frame, color })` | 1×4×6 door frame + door (cuts its opening; 18 plates tall) |

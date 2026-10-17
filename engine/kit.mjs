@@ -337,3 +337,44 @@ export function panel(m, { x, y, z, rot = 0, w, rows = 1, color = 'Black', brick
     }
   });
 }
+
+// ---- whole buildings ------------------------------------------------------------------------------------------------------------
+/** A finished minifig-scale building in one call — the structure a designer would start from, ready to customise:
+ *  plinth course, walls with corner quoins, evenly spaced windows with sills on every storey, a door, storey bands, a pitched or flat
+ *  roof with a chimney outside a gable end (chimney: 'left' | 'right' | false — it takes 2 studs beside the building). Faces the front (+z). x, z, w, d: footprint (w ≥ 8, d ≥ 6, d even for a pitched roof); y: ground level.
+ *  floors: storeys (the ground storey 24 plates, 27 with a shop; upper storeys 18; each includes its band slab). shop: { sign: 'BAKERY', awning: ['White','Red'], glazing: 'Trans Clear' }
+ *  turns the ground floor into a shopfront. Returns { top, roofTop, front: z + d − 1, floorY: [ground level of each storey] }. */
+export function building(m, { x, y, z, w = 12, d = 8, floors = 2, wall = 'Tan', plinth = 'Dark Bluish Gray', trim = 'White', quoin, roof = 'gable', roofColor = 'Dark Bluish Gray', window: win = 'White', door: doorColor = 'Dark Green', shop, chimney = 'left', doorAt }) {
+  const H = 18, front = z + d - 1; const floorY = []; quoin = quoin ?? trim;
+  let t = y;
+  m.box(x, t, z, w, d, 3, plinth, { hollow: true });                          // stone plinth
+  for (let f = 0; f < floors; f++) {
+    const y0 = f === 0 ? y : t; floorY.push(y0);
+    const Hf = f === 0 ? (shop ? 28 : 24) : H;                                 // the ground storey is taller: a door (18) and a course or two over it
+    const wallFrom = f === 0 ? y + 3 : y0, wallTo = y0 + Hf - 1;              // the storey's walls, then a band slab
+    m.box(x, wallFrom, z, w, d, wallTo - wallFrom, wall, { hollow: true });
+    for (const cx of [x, x + w - 1]) for (const cz of [z, front]) for (let yy = wallFrom + 3; yy + 3 <= wallTo; yy += 6) { m.cut(cx, yy, cz, 1, 1, 3); m.brick('1x1', cx, yy, cz, quoin); }
+    m.box(x, wallTo, z, w, d, 1, trim, { kind: 'plate' });                    // storey band / floor slab
+    // front: door (ground floor) and windows; sides: one window each if deep enough
+    const slots = []; for (let u = 2; u + 2 <= w - 2; u += 3) slots.push(u);
+    const dAt = doorAt ?? (x + Math.floor((w - 4) / 2));
+    if (f === 0 && shop) {
+      kit_door(m, { x: dAt, y, z: front, color: doorColor, frame: trim });
+      for (const u of slots) { const wx = x + u; if (wx + 2 > dAt - 1 && wx < dAt + 5) continue; window(m, { x: wx, y: y + 3, z: front, size: '1x2x3', frame: trim, glass: shop.glazing ?? 'Trans Clear' }); }
+      if (shop.awning) awning(m, { x: x + 1, y: y + 18, z: front, w: w - 2, colors: shop.awning, ledge: trim });
+      if (shop.sign) sign(m, { x: x + Math.max(1, Math.floor((w - shop.sign.length) / 2)), y: y + 24, z: front, text: shop.sign, color: shop.signColor ?? 'Dark Green', brick: wall });
+    } else {
+      if (f === 0) kit_door(m, { x: dAt, y, z: front, color: doorColor, frame: trim });
+      for (const u of slots) { const wx = x + u; if (f === 0 && wx + 2 > dAt - 1 && wx < dAt + 5) continue; window(m, { x: wx, y: y0 + (f === 0 ? 6 : 4), z: front, size: '1x2x3', frame: win, sill: trim }); }
+    }
+    if (d >= 6) { window(m, { x: x + w - 1, y: y0 + (f === 0 ? 6 : 4), z: z + Math.floor(d / 2) - 1, rot: 1, size: '1x2x2', frame: win, sill: trim });
+      window(m, { x, y: y0 + (f === 0 ? 6 : 4), z: z + Math.floor(d / 2) - 1, rot: 3, size: '1x2x2', frame: win, sill: trim }); }
+    t = wallTo + 1;
+  }
+  const top = t; let roofTop = t;
+  if (roof === 'gable' && d % 2 === 0) roofTop = roofFn(m, { x, y: t, z, w, d, color: roofColor, gable: wall });
+  else { m.box(x, t, z, w, d, 3, wall, { hollow: true, top: 'tile' }); m.box(x, t + 3, z, w, d, 1, trim, { kind: 'tile' }); roofTop = t + 4; }
+  if (chimney) { const cx = chimney === 'right' ? x + w : x - 2, cz = z; m.box(cx, y, cz, 2, 2, roofTop - y + 3, 'Dark Bluish Gray'); m.plate('2x2', cx, roofTop + 3, cz, 'Black'); }   // outside a gable wall: 2 studs to the left (or right)
+  return { top, roofTop, front, floorY };
+}
+const kit_door = (m, o) => door(m, o); const roofFn = (m, o) => roof(m, o);

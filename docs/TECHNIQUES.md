@@ -3,6 +3,10 @@
 How LEGO designers make simple shapes look like the real thing. Each technique names the parts and, where one exists, the kit call.
 A worked example that uses most of them: `examples/cottage/build.mjs` (renders: `examples/cottage/out/hero.png`, `sheet.png`).
 
+## Buildings
+- `kit.building` gives the whole structure (plinth, quoins, windows with sills, door, bands, roof, chimney, optional shopfront with sign and
+  awning). Build several side by side for a street; then add what is particular to your subject.
+
 ## Walls
 - **Plinth course**: the bottom brick of a building in a darker or stone colour (`m.box(…, 3, 'Dark Bluish Gray', { hollow: true })`,
   then the walls on top). Reads instantly as "built on a foundation".
