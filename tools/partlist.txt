@@ -43,3 +43,6 @@
 
 # letter tiles (kit.sign)
  3070bpta 3070bptb 3070bptc 3070bptd 3070bpte 3070bptf 3070bptg 3070bpth 3070bpti 3070bptj 3070bptk 3070bptl 3070bptm 3070bptn 3070bpto 3070bptp 3070bptq 3070bptr 3070bpts 3070bptt 3070bptu 3070bptv 3070bptw 3070bptx 3070bpty 3070bptz 3070bpv0 3070bpv1 3070bpv2 3070bpv3 3070bpv4 3070bpv5 3070bpv6 3070bpv7 3070bpv8 3070bpuf 3070bpuh 3070bpuj
+
+# more animals: crouching / curled cat, dogs
+6251p01 6251 11602p01 13786p01 93089p01 29602p01 53075p01 2889p01 12888p01 92586p01

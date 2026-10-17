@@ -82,7 +82,13 @@ controls.autoRotate = !STILL; controls.autoRotateSpeed = 0.6;
 
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
 addEventListener('resize', resize); resize();
-const [az0, el0] = VIEWS[Q.get('view') ?? 'hero'] ?? VIEWS.hero; place(camera, az0, el0, camera.aspect, 1.0); controls.update();
+// the opening view: the set's own choice (meta.view: [azimuth, elevation] in degrees; meta.focus: a section to frame closer)
+if (SET.meta.view) VIEWS.hero = [THREE.MathUtils.degToRad(SET.meta.view[0]), THREE.MathUtils.degToRad(SET.meta.view[1])];
+let heroK = 1;
+if (SET.meta.focus && !ONLY && !SHEET) { const fb = new THREE.Box3(), tmp = new THREE.Box3(), M = new THREE.Matrix4();
+  for (const it of items) { if (SET.inst[it.i][15] !== SET.meta.focus) continue; const g = GEO[it.id].main ?? GEO[it.id].deco ?? GEO[it.id].glass; M.compose(it.home.pos, it.home.quat, new THREE.Vector3(1, 1, 1)); tmp.copy(g.boundingBox).applyMatrix4(M); fb.union(tmp); }
+  if (!fb.isEmpty()) { const c = fb.getCenter(new THREE.Vector3()); target.lerp(c, 0.6); heroK = Math.max(0.45, Math.min(1, (fb.getSize(new THREE.Vector3()).length() / 2) / radius * 1.6)); } }
+const [az0, el0] = VIEWS[Q.get('view') ?? 'hero'] ?? VIEWS.hero; place(camera, az0, el0, camera.aspect, Q.get('view') && Q.get('view') !== 'hero' ? 1 : heroK); controls.target.copy(target); controls.update();
 
 // ---- take apart / rebuild ----------------------------------------------------------------------------------------------------
 // state: 'built' | 'apart' | 'rebuilding'. Both motions are closed-form functions of time, so they look the same on every machine.

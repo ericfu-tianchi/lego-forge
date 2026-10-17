@@ -13,7 +13,7 @@ export function instances(model) {
 export function html(model, stats) {
   const inst = instances(model); const ids = [...new Set(inst.map((r) => r[0]))];
   const geo = {}; for (const id of ids) { const g = JSON.parse(fs.readFileSync(path.join(ROOT, 'engine/parts/geo', id + '.json'), 'utf8')); if (partDef(id).ds) g.ds = true; geo[id] = g; }
-  const SET = { meta: { title: model.meta.title, subtitle: model.meta.subtitle, parts: stats.parts, colors: stats.colors }, geo, inst };
+  const SET = { meta: { title: model.meta.title, subtitle: model.meta.subtitle, parts: stats.parts, colors: stats.colors, focus: model.meta.focus, view: model.meta.view }, geo, inst };
   const tpl = fs.readFileSync(path.join(ROOT, 'viewer/template.html'), 'utf8'); const js = fs.readFileSync(path.join(ROOT, 'viewer/dist/viewer.js'), 'utf8');
   return tpl.replace('/*SET*/null', () => JSON.stringify(SET)).replace('/*VIEWER*/', () => js.replace(/<\/script/g, '<\\/script'));
 }

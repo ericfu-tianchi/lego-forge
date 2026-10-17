@@ -345,6 +345,7 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | id | part | size | top | note |
 |---|---|---|---|---|
 | 2546 | Animal Bird Parrot | 1×1 · 9.22p | smooth · no anti-studs |  |
+| 6251 | Animal Cat Crouching | 1×2 · 4.59p | smooth |  |
 | 11602 | Animal Cat Sitting | 2×2 · 6.71p | smooth |  |
 | 13665 | Animal Bird Crow | 3×2 · 3.17p | smooth |  |
 | 30238 | Animal Spider | 3×2 · 2p | smooth |  |
@@ -352,9 +353,18 @@ Sized helpers — bricks: 1x1, 1x2, 1x3, 1x4, 1x6, 1x8, 1x10, 1x12, 2x2, 2x3, 2x
 | 33320 | Animal Frog | 1×1 · 2.83p | smooth |  |
 | 64648 | Animal Fish Straight | 1×3 · 3.19p | smooth |  |
 | 2546p01 | Animal Bird Parrot with White Face and Yellow/Green Wings Pattern | 1×1 · 9.22p | smooth · no anti-studs |  |
+| 2889p01 | Animal Dog Alsatian / German Shepherd Puppy with Black Eyes and Nose and Dark Brown Muzzle Pattern | 1×2 · 5.57p | smooth |  |
+| 6251p01 | Animal Cat Crouching with Medium Blue Eyes, Black Pupils, Eyelashes and Nose Pattern | 1×2 · 4.59p | smooth |  |
+| 11602p01 | Animal Cat Sitting with Medium Azure Eyes and Collar with Bright Pink Heart Tag, Black Nose and Light Bluish Grey Patches Pattern | 2×2 · 6.71p | smooth |  |
+| 12888p01 | Animal Dog Chihuahua with Face Pattern | 1×1 · 4.92p | smooth |  |
 | 12891p01 | Animal Bird Seagull with Bright Light Orange Beak and Black and Light Bluish Grey Wings Pattern | 3×3 · 5.78p | smooth |  |
+| 13786p01 | Animal Cat Standing Looking Forward with White Chest and Muzzle and Bright Pink Nose Pattern | 1×2 · 7.67p | smooth |  |
 | 13786p03 | Animal Cat Standing Looking Forward with Yellow Eyes and Dark Bluish Grey Nose and Mouth Pattern | 1×2 · 7.67p | smooth |  |
 | 26078p01 | Animal Dog Terrier with Black Eyes and Nose and Light Bluish Grey Fur Lines Pattern | 1×3 · 6.78p | smooth |  |
+| 29602p01 | Animal Dog French Bulldog with White Spot on Forehead and Black Face Pattern | 1×3 · 5.89p | smooth |  |
+| 53075p01 | Animal Dog Dachshund with Black Eyes and Nose Pattern | 1×4 · 5.4p | 1 studs |  |
+| 92586p01 | Animal Dog German Shepherd with Black Eyes, Nose, Blaze and Dark Brown Muzzle Pattern | 1×4 · 8.96p | 1 studs |  |
+| 93089p01 | Animal Cat Standing Looking Left with Yellowish Green Eyes and Dark Bluish Grey Stripes Pattern | 1×3 · 6.01p | smooth |  |
 
 ## Vehicles
 

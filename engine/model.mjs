@@ -1,6 +1,6 @@
 // The model a build script writes. Grid: x and z in studs, y in plates (a brick is 3 plates); x/z/y of a part is the min corner of its
 // footprint and its bottom face. rot is a quarter turn count about the vertical axis (0–3), turning the part about its own centre.
-import { CATALOG, part as partDef, footprint } from './catalog.mjs';
+import { CATALOG, part as partDef, footprint, resolve as resolveP } from './catalog.mjs';
 import { colorName } from './colors.mjs';
 
 export const BRICK = { '1x1': '3005', '1x2': '3004', '1x3': '3622', '1x4': '3010', '1x6': '3009', '1x8': '3008', '1x10': '6111', '1x12': '6112', '2x2': '3003', '2x3': '3002', '2x4': '3001', '2x6': '2456', '2x8': '3007', '2x10': '3006' };
@@ -50,13 +50,14 @@ export class Model {
       if (opts.hollow && inside && !(capped && j >= h - (opts.top === 'tile' ? 2 : 1))) continue;
       const top = j === h - 1 && opts.top === 'tile';
       // hollow walls: each wall is its own run, and the corners change hands course by course so the walls interlock
-      let unit = opts.unit;
-      if (opts.hollow && !inside && !(capped && j >= h - (opts.top === 'tile' ? 2 : 1))) {
+      let unit = opts.unit; const lid = capped && j >= h - (opts.top === 'tile' ? 2 : 1);
+      if (lid) unit = `${opts.unit ?? ''}lid${x},${z}`;                         // the lid: one unit over walls and interior, so its plates bridge them
+      if (opts.hollow && !inside && !lid) {
         const course = kind === 'brick' ? Math.floor(j / 3) : j; const fb = k === 0 || k === d - 1, lr = i === 0 || i === w - 1;
         const side = fb && lr ? (course % 2 ? (i === 0 ? 'L' : 'R') : (k === 0 ? 'B' : 'F')) : fb ? (k === 0 ? 'B' : 'F') : (i === 0 ? 'L' : 'R');
         unit = `${opts.unit ?? ''}wall${x},${z}:${side}`;
       }
-      this.vox.set(`${x + i},${y + j},${z + k}`, { color: colorName(color) ?? color, kind: top ? 'tile' : kind, tag: this.tag, group: this.groupId, unit });
+      this.vox.set(`${x + i},${y + j},${z + k}`, { color: colorName(color) ?? color, kind: top ? 'tile' : lid && kind === 'brick' ? 'plate' : kind, tag: this.tag, group: this.groupId, unit });
     }
     return this;
   }
@@ -78,6 +79,9 @@ export class Model {
   defer(fn) { this.deferred.push([fn, this.tag, this.groupId]); }
   pack() {
     for (const [fn, tag, g] of this.deferred.splice(0)) { const t0 = this.tag, g0 = this.groupId; this.tag = tag; this.groupId = g; try { fn(); } finally { this.tag = t0; this.groupId = g0; } }
+    // a part standing on a tiled floor: the tile cells under it become plates (same colour), so it has studs to stand on — the way a
+    // builder leaves a stud exposed where a figure or a table goes
+    for (const p of this.parts) { if (p.free) continue; const r = resolveP(p); for (const [fx, fz] of r.female) { const k = `${Math.floor(fx)},${p.y - 1},${Math.floor(fz)}`; const v = this.vox.get(k); if (v && v.kind === 'tile') this.vox.set(k, { ...v, kind: 'plate', unit: (v.unit ?? '') + '~stand' }); } }
     if (!this.vox.size) return this;
     const layers = new Map(); for (const k of this.vox.keys()) { const [x, y, z] = k.split(',').map(Number); if (!layers.has(y)) layers.set(y, []); layers.get(y).push([x, z]); }
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);

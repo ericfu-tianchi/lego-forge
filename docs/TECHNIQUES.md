@@ -48,7 +48,8 @@ A worked example that uses most of them: `examples/cottage/build.mjs` (renders: 
 - **Depth**: step faces in and out by one stud (a recessed screen, a protruding drive bay) — flat faces read as boxes.
 
 ## Vehicles
-- `kit.wheels` gives an axle, two wheels and a mudguard; build the body from its top. Cars are 4–6 studs wide at minifig scale.
+- Start from `kit.vehicle` (car, van, truck, bus) and make it particular: a fire engine is a truck with a ladder on the bed, beacons
+  (Trans Dark Blue 1×1 round plates) on the cab roof, `kit.sign` on the side. `kit.wheels` alone gives an axle with a mudguard.
 - Windscreen 3823 (2×4×2), steering wheel 3829c01, seats 4079. Headlights: 1×1 round plates or tiles in Trans Clear / Trans Yellow on the front.
 
 ## Interiors and furniture

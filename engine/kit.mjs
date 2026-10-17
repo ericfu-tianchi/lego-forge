@@ -37,23 +37,25 @@ export function door(m, { x, y, z, rot = 0, frame = 'White', color = 'Red' }) {
 /** A pitched roof over the rectangle x..x+w, z..z+d (studs), starting at plate level y. ridge 'x': the ridge runs along x, the slopes
  *  face +z and −z; ridge 'z': along z. Courses of 45° slopes step in one stud per brick of height; the gable ends are filled with
  *  bricks in `gable` colour (default: the roof colour). overhang: studs the roof reaches past the walls on every side (0 or 1; the slab it
- *  sits on must cover the walls). Returns the plate level of the top. */
-export function roof(m, { x, y, z, w, d, color = 'Dark Bluish Gray', gable, ridge = 'x', overhang = 0 }) {
+ *  sits on must cover the walls). stripes: colours that alternate every 2 studs along the ridge (a market stall, an awning roof);
+ *  snow: a colour for the top course and the ridge (snow on the roof). Returns the plate level of the top. */
+export function roof(m, { x, y, z, w, d, color = 'Dark Bluish Gray', gable, ridge = 'x', overhang = 0, stripes, snow }) {
   if (overhang) { x -= overhang; z -= overhang; w += 2 * overhang; d += 2 * overhang; }
   gable = gable ?? color; const along = ridge === 'x';
   const W = along ? w : d, D = along ? d : w;          // W along the ridge, D across it
   if (D % 2) { m.errors.push(`roof(): the roof must be an even number of studs across the ridge (got ${D})`); return y; }
+  const tone = (u, k, top) => (top && snow ? snow : stripes ? stripes[Math.floor(u / 2) % stripes.length] : color);
   const put = (u, v, id, rot, c = color) => { const [px, pz] = along ? [x + u, z + v] : [x + v, z + u]; return m.part(id, px, y + k * 3, pz, c, along ? rot : (rot + 1) % 4); };
   let k = 0;
   // 3039 at rot 0 has its studs on the −z row and slopes down towards +z: the −z course is turned (rot 2) to slope down outwards
   // runs of 2-wide slopes along the ridge; every other course starts with a 1-wide one so the joints overlap and the courses hold together
   const runs = (c) => { const r = []; let u = 0; if (c % 2 === 1 && W > 2) { r.push([0, 1]); u = 1; } for (; u < W; u += 2) r.push([u, Math.min(2, W - u)]); return r; };
   for (; D - 2 * k > 2; k++) {
-    for (const [u, n] of runs(k)) { put(u, k, n === 2 ? '3039' : '3040b', 2); put(u, D - 2 - k, n === 2 ? '3039' : '3040b', 0); }
+    for (const [u, n] of runs(k)) { const c = tone(u, k, D - 2 * (k + 1) <= 2); put(u, k, n === 2 ? '3039' : '3040b', 2, c); put(u, D - 2 - k, n === 2 ? '3039' : '3040b', 0, c); }
     if (D - 2 * k > 4) m.box(along ? x : x + k + 2, y + k * 3, along ? z + k + 2 : z, along ? W : D - 4 - 2 * k, along ? D - 4 - 2 * k : W, 3, gable);
   }
   const rest = D - 2 * k;   // 1 or 2 studs left under the ridge
-  for (const [u, n] of runs(k)) put(u, k, n === 2 ? '3043' : '3044b', 0);
+  for (const [u, n] of runs(k)) put(u, k, n === 2 ? '3043' : '3044b', 0, tone(u, k, true));
   return y + (k + 1) * 3;
 }
 
@@ -126,8 +128,8 @@ export function table(m, { x, y, z, color = 'White', leg = 'Black', h = 5 }) {
   m.rigid(() => { let t = y; m.part('4032a', x, t, z, leg); t += 1; m.part('87580', x, t, z, leg); t += 1; for (; t < y + h - 1; t += 3) m.part('3062b', x + 0.5, t, z + 0.5, leg);
     m.part('4032a', x, t, z, color); t += 1; m.part('14769', x, t, z, color); });
 }
-/** A chair facing rot (0 = facing the front): a 2-plate-high seat on legs and a backrest; seat a figure on it with
- *  kit.minifig({ sit: true, y: <the returned level>, x, z, rot }). x, z = its 2×2 footprint. Returns the seat's top level. */
+/** A chair facing rot (0 = facing the front): a seat on four round legs and a backrest. x, z = its 2×2 footprint.
+ *  Returns the seat for a figure: kit.minifig(m, { ...kit.chair(m, {...}), torso, … }) seats someone on it. */
 export function chair(m, { x, y, z, rot = 0, color = 'Reddish Brown' }) {
   const back = [[0, 0], [1, 0], [0, 1], [0, 0]][rot], along = rot % 2 === 0;   // the backrest row is on the side away from where it faces
   const bx = rot === 1 ? x : rot === 3 ? x + 1 : x, bz = rot === 0 ? z : rot === 2 ? z + 1 : z;
@@ -136,10 +138,12 @@ export function chair(m, { x, y, z, rot = 0, color = 'Reddish Brown' }) {
     m.plate('2x2', x, y + 3, z, color);
     m.brick('1x2', bx, y + 4, bz, color, along ? 0 : 1); m.tile('1x2', bx, y + 7, bz, color, along ? 0 : 1);
   });
-  return y + 4;
+  // where a seated figure goes: the free row in front of the backrest
+  const sx = rot === 1 ? x + 1 : x, sz = rot === 0 ? z + 1 : z;
+  return { y: y + 4, x: sx, z: sz, rot, sit: true };
 }
 /** A sofa facing rot: dark feet, a seat block, a backrest along the back and arms at both ends. w = its length (≥ 4).
- *  Returns the seat level. */
+ *  Returns { y: seat level, seats: [places for seated figures] }. */
 export function sofa(m, { x, y, z, w = 6, rot = 0, color = 'Dark Blue', legs = 'Black' }) {
   const along = rot % 2 === 0; const W = along ? w : 3, D = along ? 3 : w;
   m.box(x, y, z, W, D, 1, legs, { kind: 'plate' });                                   // a dark plate as the feet
@@ -148,7 +152,8 @@ export function sofa(m, { x, y, z, w = 6, rot = 0, color = 'Dark Blue', legs = '
   m.box(backRow[0], y + 4, backRow[1], backRow[2], backRow[3], 6, color, { top: 'tile' });   // backrest
   const ends = along ? [[x, z], [x + w - 1, z]] : [[x, z], [x, z + w - 1]];
   for (const [ex, ez] of ends) m.box(ex, y + 4, ez, along ? 1 : 3, along ? 3 : 1, 3, color, { top: 'tile' });   // arms
-  return y + 4;   // the seat level: seat figures here (kit.minifig({ sit: true, y: <this> })), the studs read as cushions
+  const seats = []; for (let u = 1; u + 2 <= w - 1; u += 2) { const [sx, sz] = along ? [x + u, rot === 0 ? z + 1 : z] : [rot === 1 ? x + 1 : x, z + u]; seats.push({ y: y + 4, x: sx, z: sz, rot, sit: true }); }
+  return { y: y + 4, seats };   // seats: places for figures (kit.minifig(m, { ...seats[0], … })); a pet goes on any free stud of the seat
 }
 /** A bookshelf against a wall: a frame w wide × 1 deep, h bricks tall, with rows of books (1×1 bricks and plates in mixed colours). */
 export function bookshelf(m, { x, y, z, w = 4, h = 3, rot = 0, color = 'Reddish Brown', books = ['Red', 'Dark Blue', 'Dark Green', 'Tan', 'Dark Red', 'White'] }) {
@@ -245,13 +250,15 @@ export function flowerBed(m, { x, y, z, w, d, colors = ['Red', 'Yellow', 'Bright
   m.box(x, y, z, w, d, 1, soil, { kind: 'plate' });
   for (let i = 0; i < w; i++) for (let k = 0; k < d; k++) { const r = m.rand(); if (r < density) m.part('24866', x + i, y + 1, z + k, colors[Math.floor(m.rand() * colors.length)]); else if (r < density + 0.25) m.part('6141', x + i, y + 1, z + k, leaves); }
 }
-/** A garden bench, 4 studs long along x (rot 0) or z (rot 1): two round legs, a smooth seat, a backrest at the back edge. */
+/** A garden bench, 4 studs long along x (rot 0) or z (rot 1): two round legs and a plate seat. Returns a seat for a figure
+ *  (kit.minifig(m, { ...kit.bench(m, {...}), … })). */
 export function bench(m, { x, y, z, rot = 0, color = 'Reddish Brown', legs = 'Black' }) {
+  const at = (u, v) => (rot % 2 === 0 ? [x + u, z + v] : [x + v, z + u]);
   m.rigid(() => {
-    const at = (u, v) => (rot % 2 === 0 ? [x + u, z + v] : [x + v, z + u]);
     for (const u of [0, 3]) { const [a, b] = at(u, 0); m.part('3062b', a, y, b, legs); }
-    const [sx, sz] = at(0, 0); m.tile('1x4', sx, y + 3, sz, color, rot % 2);
+    const [sx, sz] = at(0, 0); m.plate('1x4', sx, y + 3, sz, color, rot % 2);
   });
+  const [sx, sz] = at(1, 0); return { y: y + 4, x: sx, z: sz, rot: rot % 2 ? 1 : 0, sit: true };   // a figure can sit in the middle
 }
 
 /** A palm tree on one stud: a slim trunk of round bricks in two browns, crowned with two layers of leaves and a small cap. */
@@ -378,3 +385,59 @@ export function building(m, { x, y, z, w = 12, d = 8, floors = 2, wall = 'Tan', 
   return { top, roofTop, front, floorY };
 }
 const kit_door = (m, o) => door(m, o); const roofFn = (m, o) => roof(m, o);
+
+/** A snowman on a 2×2 footprint: two round white bodies, a face with coal eyes and a carrot nose, a hat. */
+export function snowman(m, { x, y, z, hat = 'Black', scarf = 'Red' }) {
+  let t = y; m.rigid(() => {
+    m.part('3941', x, t, z, 'White'); t += 3; m.part('3941', x, t, z, 'White'); t += 3;     // body
+    m.part('4032a', x, t, z, scarf); t += 1;                                                // scarf
+    m.part('87580', x, t, z, 'White'); t += 1; m.part('4070', x + 0.5, t, z + 0.5, 'White'); t += 3;   // head on a jumper (the headlight brick's recess reads as a face)
+    m.part('6141', x + 0.5, t, z + 0.5, hat); t += 1; m.part('3062b', x + 0.5, t, z + 0.5, hat); t += 3;
+  });
+}
+
+/** A finished minifig-scale vehicle, 4 studs wide, running along z with its front at +z — start every road vehicle from this.
+ *  kind: 'car' (len 8–10: bonnet, windscreen, open cockpit with a seat, boot) | 'van' / 'truck' (len 10–16: cab with windscreen,
+ *  box body behind; truck: an open flatbed) | 'bus' (len 16–24, 4 wide, tall glazed body). x, z = the min corner of its 4 × len
+ *  footprint; y = the surface it stands on. color, accent: body colours; glass: windows. Returns { top, cabSeat, bed } — a seat for a
+ *  driver (kit.minifig(m, { ...cabSeat, … })) and, for trucks, the level of the bed to load things on. It stands loose on its wheels. */
+export function vehicle(m, { x, y, z, len = 8, kind = 'car', color = 'Red', accent = 'White', glass = 'Trans Clear', tyre = 'Black', rim = 'Light Bluish Gray' }) {
+  const front = z + len - 1; const out = {};
+  const wz = [z, front - 1];                                                           // rear and front axles under the end rows
+  let floor; for (const az of wz) floor = wheels(m, { x, y, z: az, color, tyre, rim });   // floor = top of the mudguards
+  m.box(x, y + 3, z + 2, 4, front - 1 - (z + 2), 2, color, { kind: 'plate' });          // fill between the axles to the mudguard top
+  m.box(x, floor, z, 4, len, 1, color, { kind: 'plate' });                              // chassis plate over everything
+  const f = floor + 1; m.section(m.tag || 'vehicle', () => {});
+  // front: bumper, headlights, grille — the front row of every kind
+  m.part('4070', x, f, front, 'White', 0); m.part('4070', x + 3, f, front, 'White', 0); m.part('2877', x + 1, f, front, 'Dark Bluish Gray');
+  m.tile('1x4', x, f + 3, front, accent);
+  // rear: tail lights
+  m.part('3005', x, f, z, color); m.part('3005', x + 3, f, z, color); m.part('6141', x, f + 3, z, 'Trans Red'); m.part('6141', x + 3, f + 3, z, 'Trans Red');
+  m.box(x + 1, f, z, 2, 1, 3, color); m.tile('1x2', x + 1, f + 3, z, accent);
+  if (kind === 'car') {
+    m.box(x, f, front - 3, 4, 3, 3, color);                                             // bonnet
+    m.cut(x, f, front, 4, 1, 3); m.box(x, f + 3, front - 2, 4, 1, 1, color, { kind: 'tile' });
+    m.part('3823', x, f + 3, front - 4, glass);                                         // windscreen on the bonnet's back edge
+    m.box(x, f, z + 1, 1, front - 3 - (z + 1), 1, color, { kind: 'plate' }); m.box(x + 3, f, z + 1, 1, front - 3 - (z + 1), 1, color, { kind: 'plate' });   // low doors: the driver's arms rest over them
+    m.box(x, f, z + 1, 4, 1, 3, color, { top: 'tile' });                               // seat back
+    out.cabSeat = { x: x + 1, y: f, z: z + 2, rot: 0, sit: true };                        // the driver, behind the steering wheel
+    m.part('3829c01', x + 1, f, front - 4, 'Black');
+  } else if (kind === 'bus') {
+    const H = 18; m.box(x, f, z + 1, 4, len - 2, H, color, { hollow: true, top: 'plate' });
+    for (let zz = z + 2; zz + 2 <= front - 3; zz += 3) for (const lvl of [f + 6]) { window(m, { x, y: lvl, z: zz, rot: 3, size: '1x2x2', frame: accent, glass }); window(m, { x: x + 3, y: lvl, z: zz, rot: 1, size: '1x2x2', frame: accent, glass }); }
+    window(m, { x, y: f + 6, z: front - 1, size: '1x4x3', frame: accent, glass }); m.cut(x, f, front, 4, 1, 3);
+    m.box(x, f + H, z + 1, 4, len - 2, 1, accent, { kind: 'tile' });
+    out.cabSeat = { x: x + 1, y: f, z: front - 3, rot: 0, sit: true };
+  } else {   // van / truck: cab at the front
+    const cz = front - 4;                                                               // the cab: rows cz .. front − 1
+    m.box(x, f, cz, 4, 4, 3, color); m.cut(x + 1, f, cz + 1, 2, 2, 3);                   // cab lower, a seat well
+    m.part('3823', x, f + 3, front - 2, glass);                                         // windscreen
+    m.box(x, f + 3, cz, 4, 2, 6, color);                                                // cab back
+    m.box(x, f + 9, cz, 4, 4, 1, color, { kind: 'plate' }); m.box(x, f + 10, cz, 4, 4, 1, accent, { kind: 'tile' });   // roof
+    out.cabSeat = { x: x + 1, y: f, z: cz + 1, rot: 0, sit: true };
+    if (kind === 'van') { m.box(x, f, z + 1, 4, cz - z - 1, 12, color, { hollow: true, top: 'tile' }); m.box(x, f + 3, z + 2, 1, cz - z - 3, 3, accent); m.box(x + 3, f + 3, z + 2, 1, cz - z - 3, 3, accent); }
+    else { m.box(x, f, z + 1, 4, cz - z - 1, 1, 'Dark Bluish Gray', { kind: 'plate' }); out.bed = f + 1;
+      m.box(x, f + 1, z + 1, 1, cz - z - 1, 3, color); m.box(x + 3, f + 1, z + 1, 1, cz - z - 1, 3, color); }
+  }
+  return out;
+}

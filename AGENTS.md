@@ -150,7 +150,7 @@ export default m;
 ### Model methods
 | call | does |
 |---|---|
-| `new Model({ title, subtitle, budget: [min, max] })` | the set |
+| `new Model({ title, subtitle, budget: [min, max], focus, view })` | the set. `focus: '<section>'` frames the opening view closer on that section (the subject of a scene: the cat, the stall); `view: [azimuth°, elevation°]` sets the opening angle (default [35, 24]) |
 | `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
 | `m.brick(size, x, y, z, color, rot)` · `m.plate(…)` · `m.tile(…)` | a plain part by its LEGO size; rot 0 = long side along x, rot 1 = along z |
 | `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'plate'` = a solid lid on a hollow box (needed for anything narrower built on top: a setback, a chimney); `top: 'tile'` = a solid lid finished with tiles |
@@ -162,7 +162,8 @@ export default m;
 `brick/plate/tile` take the LEGO name of the size (`'1x4'`, `'2x6'` — order doesn't matter) and a `rot`: **rot 0 lays the long side
 left–right (along x), rot 1 front–back (along z)**. `m.plate('1x6', 3, 1, 0, 'Tan')` runs from x 3 to 8; `m.plate('1x6', 3, 1, 0, 'Tan', 1)` from z 0 to 5.
 To see any part's studs and anti-studs from above: `node bin/lego.mjs part <id>`.
-Tiles have no studs on top: nothing can be built on them (that is the point). Studs only connect to a part whose bottom is exactly on them.
+Tiles have no studs on top: nothing can be built on them (that is the point) — except that a part placed directly on a tiled
+`box()` floor (a figure, a table, a lamp) gets the tiles under it turned into plates automatically, as a builder would leave studs there. Studs only connect to a part whose bottom is exactly on them.
 A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15573, 87580) under it.
 
 ### Kit (`engine/kit.mjs`) — proven sub-builds; use them instead of re-inventing
@@ -172,7 +173,7 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.base(m, { x, z, w, d, color, under })` | a 2-plate base that holds together; returns the top level |
 | `kit.window(m, { x, y, z, rot, size: '1x2x2'∣'1x2x3'∣'1x4x3', frame, glass, sill })` | frame + glass in a wall (cuts its opening). rot = the side it looks out of (0 front … 3 left); `sill: colour` adds a sill |
 | `kit.door(m, { x, y, z, rot, frame, color })` | 1×4×6 door frame + door (cuts its opening; 18 plates tall) |
-| `kit.roof(m, { x, y, z, w, d, color, gable, ridge: 'x'∣'z', overhang })` | a 45° pitched roof over a rectangle; even number of studs across the ridge; returns the top level |
+| `kit.roof(m, { x, y, z, w, d, color, gable, ridge: 'x'∣'z', overhang, stripes: [colours], snow: colour })` | a 45° pitched roof over a rectangle; even number of studs across the ridge; returns the top level |
 | `kit.tree(m, { x, y, z, size: 'S'∣'M'∣'L', leaves, cap, trunk })` | a leafy tree on a 2×2 footprint (canopy ~6×6) |
 | `kit.pine(m, { x, y, z, big })` · `kit.bush(…)` · `kit.flower(m, { x, y, z, color })` | moulded plants |
 | `kit.lamp(m, { x, y, z, color, light })` | a street lamp on one stud |
@@ -189,9 +190,11 @@ A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15
 | `kit.sign(m, { x, y, z, rot, text, color, brick })` | lettering on a wall: letter tiles (A–Z, 0–9, `. - @`) mounted sideways on side-stud bricks set into the wall course at y; runs to the right as seen from outside |
 | `kit.panel(m, { x, y, z, rot, w, rows, color, brick })` | a smooth tiled face on a wall (screens, fascias, display fronts): rows of 2-stud-tall tiles on side-stud bricks, one row every 5 plates |
 | `kit.sideRow(m, { x, y, z, rot, len, color })` | just the side-stud bricks (studs facing out) — returns the stud positions for your own mounting |
-| `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor, sit })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included). `sit: true` seats it on a 1×2 cushion plate at y (on a chair, sofa, bench or any studs), legs over the front edge |
-| `kit.chair(m, { x, y, z, rot, color })` · `kit.table(m, { x, y, z, color })` | a chair (returns its seat level, for a seated figure) and a round café table, each on 2×2 |
-| `kit.sofa(m, { x, y, z, w, rot, color })` · `kit.bookshelf(…)` · `kit.rug(…)` | living-room furniture; the sofa returns its seat level |
+| `kit.minifig(m, { x, y, z, rot, torso, shirt, legs, face, hair, hairColor, sit })` | a minifigure on 2 studs (2×1 at rot 0/2, 1×2 at rot 1/3). torso/face/hair names: `kit.TORSOS`, `kit.FACES`, `kit.HAIR` (hats included). `sit: true` seats it on a 1×2 cushion plate at y, legs over the front edge |
+| `kit.chair(…)` · `kit.bench(…)` · `kit.sofa(…).seats[i]` · `kit.vehicle(…).cabSeat` | each returns a seat: `kit.minifig(m, { ...seat, torso: 'jacket', … })` puts a figure on it, correctly placed |
+| `kit.table(m, { x, y, z, color })` · `kit.bookshelf(…)` · `kit.rug(…)` | a round café table on 2×2, a bookshelf, a rug |
+| `kit.vehicle(m, { x, y, z, len, kind: 'car'∣'van'∣'truck'∣'bus', color, accent, glass })` | **a finished road vehicle**, 4 wide, front at +z: wheels, chassis, headlights, grille, tail lights, windscreen, cab or body. Start every vehicle from this, then customise. Returns `{ cabSeat, bed }`; it stands loose on its wheels |
+| `kit.snowman(m, { x, y, z, hat, scarf })` | a snowman on 2×2 |
 | `kit.awning(m, { x, y, z, w, rot, colors, ledge })` | a striped awning: a plate ledge in the wall course at plate level y and slopes reaching out two studs |
 
 **Studs not on top (SNOT).** `kit.sign` and `kit.panel` mount tiles sideways on bricks with studs on their side — the way real sets
