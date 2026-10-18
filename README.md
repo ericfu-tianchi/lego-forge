@@ -19,6 +19,8 @@ Paste this to your agent:
 Clone https://github.com/ericfu-tianchi/lego-forge to ~/lego-forge, read ~/lego-forge/SKILL.md, and use it whenever I ask for a LEGO set.
 ```
 
+> **Agents:** to install, clone this repository (e.g. to `~/lego-forge`) and follow `SKILL.md` whenever the user asks for a LEGO set.
+
 Claude Code plugin: `/plugin marketplace add ericfu-tianchi/lego-forge` then `/plugin install lego-forge@lego-forge`.
 
 ## Use
