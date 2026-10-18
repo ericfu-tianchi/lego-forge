@@ -1,5 +1,5 @@
 {
   "name": "lego-forge",
-  "owner": { "name": "lego-forge" },
+  "owner": { "name": "Tianchi Fu" },
   "plugins": [{ "name": "lego-forge", "source": "./", "description": "Turn an idea or a picture into a real, buildable LEGO set you can turn, take apart and rebuild in the browser." }]
 }

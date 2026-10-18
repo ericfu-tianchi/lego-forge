@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "description": "Turn an idea or a picture into a buildable, take-apart-able LEGO set — a toolkit for coding agents.",
   "type": "module",
+  "author": "Tianchi Fu",
+  "license": "MIT",
+  "repository": "github:ericfu-tianchi/lego-forge",
   "bin": { "lego": "bin/lego.mjs" },
   "scripts": {
     "build-viewer": "esbuild viewer/src/viewer.js --bundle --format=iife --minify --outfile=viewer/dist/viewer.js",

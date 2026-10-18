@@ -8,6 +8,7 @@
 //   lego shots <set> [--only t] [--ref img --view v]  review images → out/sheet.png (six views), out/hero.png; with --ref, out/compare.png
 //   lego parts [words…]          search the parts catalogue (id, size, studs)
 //   lego part <id>               one part, top view: where its studs and anti-studs are, which way it faces
+//   lego open <set>              open the finished set in the browser and print its link
 import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url'; import { execSync } from 'node:child_process';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [cmd, ...rest] = process.argv.slice(2);
@@ -16,7 +17,7 @@ if (!fs.existsSync(path.join(ROOT, 'node_modules/three'))) { console.error('· f
 const inside = (p) => !path.relative(ROOT, p).startsWith('..');
 const SETS = process.env.LEGO_SETS ? path.resolve(process.env.LEGO_SETS) : inside(process.cwd()) ? path.join(ROOT, 'sets') : path.join(process.cwd(), 'lego-sets');
 const setDir = (s) => { if (!s) usage(); const cands = [path.resolve(s), path.join(SETS, s), path.join(ROOT, 'sets', s)]; const d = cands.find((c) => fs.existsSync(path.join(c, 'build.mjs'))); if (!d) { console.error(`no build.mjs for "${s}" (looked in ${cands.join(', ')})`); process.exit(2); } return d; };
-function usage() { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 11).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(1); }
+function usage() { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 12).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(1); }
 const DOCS = { rubric: 'docs/RUBRIC.md', techniques: 'docs/TECHNIQUES.md', colors: 'docs/COLORS.md', colours: 'docs/COLORS.md', parts: 'docs/PARTS.md' };
 
 if (cmd === 'build') {
@@ -31,7 +32,7 @@ if (cmd === 'build') {
   fs.writeFileSync(path.join(out, 'report.txt'), text + '\n'); console.log(text);
   fs.writeFileSync(path.join(out, 'set.html'), html(model, res.stats)); fs.writeFileSync(path.join(out, 'model.ldr'), ldr(model)); fs.writeFileSync(path.join(out, 'parts.csv'), bom(model));
   fs.writeFileSync(path.join(out, 'check.json'), JSON.stringify(res, null, 1));
-  console.log(`→ ${path.relative(process.cwd(), path.join(out, 'set.html'))}  (open in a browser)`);
+  console.log(`→ ${pathToFileURL(path.join(out, 'set.html')).href}`);
   process.exit(res.ok ? 0 : 1);
 } else if (cmd === 'shots') {
   const dir = setDir(rest[0]); const out = path.join(dir, 'out'); const only = rest.includes('--only') ? rest[rest.indexOf('--only') + 1] : null;
@@ -82,6 +83,11 @@ if (cmd === 'build') {
     await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.screenshot({ path: path.join(ROOT, 'docs/gallery', cat + '.png'), fullPage: true }); await pg.close(); console.log(`docs/gallery/${cat}.png (${parts.length})`);
   }
   await browser.close();
+} else if (cmd === 'open') {
+  const page = path.join(setDir(rest[0]), 'out', 'set.html'); if (!fs.existsSync(page)) { console.error('run `lego build` first'); process.exit(1); }
+  const url = pathToFileURL(page).href; const opener = process.platform === 'darwin' ? 'open' : process.platform === 'win32' ? 'start ""' : 'xdg-open';
+  try { execSync(`${opener} "${page}"`, { stdio: 'ignore' }); } catch {}
+  console.log(url);
 } else if (cmd === 'guide') {
   console.log(fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8').replaceAll('node bin/lego.mjs', 'lego') + `\n\n(toolkit folder: ${ROOT} — run the CLI as \`node ${path.join(ROOT, 'bin/lego.mjs')} …\` if \`lego\` is not on your PATH; sets go to ${SETS})`);
 } else if (cmd === 'docs') {

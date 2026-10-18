@@ -3,5 +3,7 @@
   "version": "0.1.0",
   "description": "Turn an idea or a picture into a real, buildable LEGO set you can turn, take apart and rebuild in the browser.",
   "license": "MIT",
+  "author": { "name": "Tianchi Fu" },
+  "repository": "https://github.com/ericfu-tianchi/lego-forge",
   "keywords": ["lego", "ldraw", "3d", "design"]
 }

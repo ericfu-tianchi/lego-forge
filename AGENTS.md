@@ -80,8 +80,11 @@ Close-ups: `shots <name> --only <section>` renders one section alone. With a pic
 signature feature built. If something blocks you (a kit call fails), simplify that one feature and carry on — never deliver a blockout.
 
 ### Step 6 · Deliver
-Tell the user: what you built (one paragraph), the part count, the file to open (`<sets>/<name>/out/set.html`), and that `model.ldr`
-opens in BrickLink Studio for building instructions and part ordering.
+Run `lego open <name>`: it opens the set in the user's browser and prints its link. Then tell the user, short:
+- **the link first**, as a clickable link — `[Open the set](file:///…/out/set.html)` using the exact URL `lego open` printed;
+- one paragraph on what you built and the part count;
+- that the page turns (drag), takes apart and rebuilds (buttons), and that `model.ldr` next to it opens in BrickLink Studio
+  (building steps, ordering the parts).
 
 ---
 
