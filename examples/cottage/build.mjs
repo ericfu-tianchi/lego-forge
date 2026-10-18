@@ -1,7 +1,6 @@
 // Worked example · minifigure scale scene: a garden cottage. Read it as a pattern for buildings in a setting.
-import { Model } from '../../engine/model.mjs';
-import * as kit from '../../engine/kit.mjs';
 
+export default function build({ Model, kit }) {
 const m = new Model({ title: 'Garden Cottage', subtitle: 'a whitewashed cottage with a pond and a flower garden', budget: [400, 900] });
 const g = kit.base(m, { w: 32, d: 24, color: 'Green' });                       // base top at g = 2
 
@@ -47,4 +46,5 @@ m.section('figures', () => {
   kit.minifig(m, { x: X + 10, y: g, z: Z + D + 4, rot: 3, torso: 'plaid', shirt: 'Dark Red', legs: 'Sand Blue', face: 'beard', hair: 'cap', hairColor: 'Dark Green' });
   m.part('26078p01', X + 12, g, Z + D + 6, 'White', 1);
 });
-export default m;
+return m;
+}

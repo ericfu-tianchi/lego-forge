@@ -1,0 +1,7 @@
+{
+  "name": "lego-forge",
+  "version": "0.1.0",
+  "description": "Turn an idea or a picture into a real, buildable LEGO set you can turn, take apart and rebuild in the browser.",
+  "license": "MIT",
+  "keywords": ["lego", "ldraw", "3d", "design"]
+}

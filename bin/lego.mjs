@@ -1,24 +1,32 @@
 #!/usr/bin/env node
-// lego — the toolkit's command line.
-//   lego new <name>              start a set: sets/<name>/brief.md + build.mjs
-//   lego build <set>             run build.mjs → check → sets/<set>/out/ (viewer .html, .ldr, parts .csv, report.txt)
+// lego — the toolkit's command line. Works from any folder; sets live in ./lego-sets/<name> (or sets/<name> inside this repo).
+//   lego guide                   print the instructions for the agent (AGENTS.md) — start here
+//   lego docs <rubric|techniques|colors|parts>   print a reference document
+//   lego example <cottage|retro-computer>        copy a worked example into your sets folder (build.mjs + renders)
+//   lego new <name>              start a set: <sets>/<name>/brief.md + build.mjs
+//   lego build <set>             run build.mjs → check → <set>/out/ (set.html, model.ldr, parts.csv, report.txt)
 //   lego shots <set> [--only t] [--ref img --view v]  review images → out/sheet.png (six views), out/hero.png; with --ref, out/compare.png
-//                                (the reference beside a render; --view hero|front|back|left|right|top picks the angle that matches it)
 //   lego parts [words…]          search the parts catalogue (id, size, studs)
 //   lego part <id>               one part, top view: where its studs and anti-studs are, which way it faces
-//   lego gallery                 (maintainers) render docs/gallery/<category>.png — every part, labelled
-import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url';
+import fs from 'node:fs'; import path from 'node:path'; import { fileURLToPath, pathToFileURL } from 'node:url'; import { execSync } from 'node:child_process';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const [cmd, ...rest] = process.argv.slice(2);
-const setDir = (s) => { if (!s) usage(); const d = fs.existsSync(s) && fs.statSync(s).isDirectory() ? path.resolve(s) : path.join(ROOT, 'sets', s); if (!fs.existsSync(path.join(d, 'build.mjs'))) { console.error(`no build.mjs in ${d}`); process.exit(2); } return d; };
-function usage() { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 7).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(1); }
+// first run from a fresh copy: install the two dependencies quietly
+if (!fs.existsSync(path.join(ROOT, 'node_modules/three'))) { console.error('· first run: installing dependencies…'); execSync('npm install --omit=dev --no-audit --no-fund --silent', { cwd: ROOT, stdio: 'inherit' }); }
+const inside = (p) => !path.relative(ROOT, p).startsWith('..');
+const SETS = process.env.LEGO_SETS ? path.resolve(process.env.LEGO_SETS) : inside(process.cwd()) ? path.join(ROOT, 'sets') : path.join(process.cwd(), 'lego-sets');
+const setDir = (s) => { if (!s) usage(); const cands = [path.resolve(s), path.join(SETS, s), path.join(ROOT, 'sets', s)]; const d = cands.find((c) => fs.existsSync(path.join(c, 'build.mjs'))); if (!d) { console.error(`no build.mjs for "${s}" (looked in ${cands.join(', ')})`); process.exit(2); } return d; };
+function usage() { console.log(fs.readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n').slice(1, 11).map((l) => l.replace(/^\/\/ ?/, '')).join('\n')); process.exit(1); }
+const DOCS = { rubric: 'docs/RUBRIC.md', techniques: 'docs/TECHNIQUES.md', colors: 'docs/COLORS.md', colours: 'docs/COLORS.md', parts: 'docs/PARTS.md' };
 
 if (cmd === 'build') {
   const dir = setDir(rest[0]); const out = path.join(dir, 'out'); fs.mkdirSync(out, { recursive: true });
   const { check, report } = await import('../engine/check.mjs'); const { html, ldr, bom, slug } = await import('../engine/export.mjs');
-  let model; try { const mod = await import(pathToFileURL(path.join(dir, 'build.mjs')).href + '?t=' + Date.now()); model = typeof mod.default === 'function' ? await mod.default() : mod.default; }
+  let model; try { const mod = await import(pathToFileURL(path.join(dir, 'build.mjs')).href + '?t=' + Date.now());
+    const { Model } = await import('../engine/model.mjs'); const kit = await import('../engine/kit.mjs');
+    model = typeof mod.default === 'function' ? await mod.default({ Model, kit }) : mod.default; }
   catch (e) { console.error('✗ build.mjs threw an error:\n' + (e.stack ?? e)); process.exit(1); }
-  if (!model?.parts) { console.error('✗ build.mjs must `export default` the Model'); process.exit(1); }
+  if (!model?.parts) { console.error('✗ build.mjs must `export default function build({ Model, kit }) { … return m; }`'); process.exit(1); }
   model.pack(); const res = check(model); const text = report(res);
   fs.writeFileSync(path.join(out, 'report.txt'), text + '\n'); console.log(text);
   fs.writeFileSync(path.join(out, 'set.html'), html(model, res.stats)); fs.writeFileSync(path.join(out, 'model.ldr'), ldr(model)); fs.writeFileSync(path.join(out, 'parts.csv'), bom(model));
@@ -31,7 +39,8 @@ if (cmd === 'build') {
   const rep = fs.existsSync(path.join(out, 'report.txt')) ? fs.readFileSync(path.join(out, 'report.txt'), 'utf8') : ''; if (rep.startsWith('FAIL')) console.log('! the last build FAILED the check — these images show a model that cannot be built as is');
   if (fs.statSync(path.join(dir, 'build.mjs')).mtimeMs > fs.statSync(page).mtimeMs) console.log('! build.mjs changed since the last build — run `lego build` first');
   let chromium; try { ({ chromium } = await import('playwright')); } catch { console.error('shots need Playwright: npm i -D playwright && npx playwright install chromium'); process.exit(1); }
-  const browser = await chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--use-gl=angle'] });
+  const launch = () => chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--use-gl=angle'] });
+  let browser; try { browser = await launch(); } catch (e) { if (!/Executable doesn't exist|install/i.test(String(e))) throw e; console.error('· first run: downloading the headless browser for renders…'); execSync('npx playwright install chromium', { cwd: ROOT, stdio: 'inherit' }); browser = await launch(); }
   const shot = async (q, file, w, h) => { const pg = await browser.newPage({ viewport: { width: w, height: h } }); await pg.goto(pathToFileURL(page).href + '?' + q); await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.waitForTimeout(200); await pg.screenshot({ path: file }); await pg.close(); };
   const sfx = only ? `-${only}` : ''; const oq = only ? `&only=${encodeURIComponent(only)}` : '';
   await shot('sheet' + oq, path.join(out, `sheet${sfx}.png`), 1800, 1200);
@@ -73,9 +82,17 @@ if (cmd === 'build') {
     await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.screenshot({ path: path.join(ROOT, 'docs/gallery', cat + '.png'), fullPage: true }); await pg.close(); console.log(`docs/gallery/${cat}.png (${parts.length})`);
   }
   await browser.close();
+} else if (cmd === 'guide') {
+  console.log(fs.readFileSync(path.join(ROOT, 'AGENTS.md'), 'utf8').replaceAll('node bin/lego.mjs', 'lego') + `\n\n(toolkit folder: ${ROOT} — run the CLI as \`node ${path.join(ROOT, 'bin/lego.mjs')} …\` if \`lego\` is not on your PATH; sets go to ${SETS})`);
+} else if (cmd === 'docs') {
+  const f = DOCS[(rest[0] ?? '').toLowerCase()]; if (!f) { console.error(`lego docs ${Object.keys(DOCS).join('|')}`); process.exit(1); } console.log(fs.readFileSync(path.join(ROOT, f), 'utf8'));
+} else if (cmd === 'example') {
+  const n = rest[0]; const src = path.join(ROOT, 'examples', n ?? ''); if (!n || !fs.existsSync(src)) { console.error(`lego example ${fs.readdirSync(path.join(ROOT, 'examples')).join('|')}`); process.exit(1); }
+  const d = path.join(SETS, '_examples', n); fs.mkdirSync(d, { recursive: true }); fs.cpSync(src, d, { recursive: true });
+  console.log(`→ ${d}/build.mjs and ${d}/out/hero.png — read the build, look at the render`);
 } else if (cmd === 'new') {
-  const name = rest[0]; if (!name) usage(); const d = path.join(ROOT, 'sets', name); if (fs.existsSync(d)) { console.error(`${d} exists`); process.exit(1); }
+  const name = rest[0]; if (!name) usage(); const d = path.join(SETS, name); if (fs.existsSync(d)) { console.error(`${d} exists`); process.exit(1); }
   fs.mkdirSync(d, { recursive: true });
   fs.copyFileSync(path.join(ROOT, 'templates/brief.md'), path.join(d, 'brief.md')); fs.copyFileSync(path.join(ROOT, 'templates/build.mjs'), path.join(d, 'build.mjs'));
-  console.log(`→ sets/${name}/brief.md, build.mjs`);
+  console.log(`→ ${path.relative(process.cwd(), d) || d}/brief.md, build.mjs`);
 } else usage();

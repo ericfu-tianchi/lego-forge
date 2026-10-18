@@ -1,32 +1,34 @@
 # LEGO Forge — instructions for the agent
 
 You turn an idea (a sentence, or a picture) into **one LEGO set**: a model made only of real LEGO parts, every part held on real studs,
-shown in a page where it turns, takes apart and rebuilds itself. The user gets `sets/<name>/out/set.html` (open in any browser),
+shown in a page where it turns, takes apart and rebuilds itself. The user gets `<sets>/<name>/out/set.html` (open in any browser),
 plus `model.ldr` (opens in BrickLink Studio) and `parts.csv`.
+
+**The command.** Everything below runs through one CLI, written `lego …` in this guide. Inside a clone of this repository run it as
+`lego …`; anywhere else as `node <toolkit>/bin/lego.mjs …` (the path printed at the end of `lego guide`). Sets are created in
+`./lego-sets/<name>` under the folder you work in (`sets/<name>` inside the repository). The first run installs what it needs by itself.
 
 **The bar is a set someone would be proud to put on a shelf**, not a pile of bricks that passes a test: the subject is recognisable at a
 glance, the proportions are right, it looks designed. Target **300–1,500 parts** (hard limit 2,000).
 
 **What to read** (keep your context for the build):
 1. This file, completely.
-2. `docs/RUBRIC.md` (short) and the sections of `docs/TECHNIQUES.md` that fit your subject.
-3. **One** worked example for your scale — `examples/cottage/` (a minifig-scale scene) or `examples/retro-computer/` (a display-scale
-   object): its `build.mjs` and `out/hero.png`.
-4. Parts: **don't read `docs/PARTS.md` whole** — search it: `node bin/lego.mjs parts <words>`, and `node bin/lego.mjs part <id>` for one
-   part's studs. Colours: `docs/COLORS.md`. Pictures of parts: `docs/gallery/<category>.png` (only if you need to see a shape).
+2. `lego docs rubric` (short) and the sections of `lego docs techniques` that fit your subject.
+3. **One** worked example for your scale — `lego example cottage` (a minifig-scale scene) or `lego example retro-computer` (a
+   display-scale object): it copies the example next to your sets; read its `build.mjs` and look at its `out/hero.png`.
+4. Parts: **don't print the whole parts list** — search it: `lego parts <words>`, and `lego part <id>` for one part's studs.
+   Colours: `lego docs colors`. Pictures of parts: `docs/gallery/<category>.png` in the toolkit folder (only to see a shape).
 
 ---
 
-## 0. Setup (once)
-```
-npm install
-npx playwright install chromium      # for review images; skip if it fails and say so to the user
-```
+## 0. Setup
+Nothing to do: the first `lego` command installs its dependencies, and the first `lego shots` downloads the headless browser it renders
+with (about 100 MB, once). If that download is impossible where you run, build and check anyway and tell the user the review images are missing.
 
 ## 1. The pipeline — follow it in order
 
 ### Step 1 · Brief (and at most one round of questions)
-Create the set: `node bin/lego.mjs new <name>` → `sets/<name>/brief.md` and `build.mjs`. Fill in the brief:
+Create the set: `lego new <name>` → `<sets>/<name>/brief.md` and `build.mjs`. Fill in the brief:
 - **Subject** in one sentence, and the **scale** (§3).
 - **Signature features**: the 3–5 things that make this subject recognisable (a red phone box: the crown on top, the long glazed sides, the
   white "TELEPHONE" band; a retro PC: beige case, deep CRT monitor, keyboard, floppy slot). Everything else is secondary.
@@ -48,7 +50,7 @@ Keep the reference image in the set folder; you will compare against it in step 
 
 ### Step 2 · Blockout
 In `build.mjs`, build the big masses only, as plain `m.box(...)` volumes at the right footprint and height, on a base if it is a scene.
-`node bin/lego.mjs build <name>` then `node bin/lego.mjs shots <name>` and look at `out/sheet.png`.
+`lego build <name>` then `lego shots <name>` and look at `out/sheet.png`.
 **Get the proportions and silhouette right now** — it is cheap here and expensive later. With a picture: `shots <name> --ref <image> --view front|hero|…`
 puts the reference beside the render (`out/compare.png`).
 
@@ -56,21 +58,21 @@ puts the reference beside the render (`out/compare.png`).
 Turn the blocks into a model. **Start from the most complete kit that fits** — buildings `kit.building`, road vehicles `kit.vehicle`,
 appliances and boxy objects `kit.casing`, furniture, plants, figures — they give a correct, detailed structure in one call. Then make it
 yours: the details that make *this* subject recognisable, its colours, figures and setting. Otherwise: walls with windows and doors (kit), roofs (kit or slopes), the signature features built precisely, then
-texture and life (§5). Use `docs/PARTS.md` and `node bin/lego.mjs parts <words>` to find parts. Build in sections (`m.section('tower', () => …)`).
+texture and life (§5). Use `lego parts <words>` to find parts. Build in sections (`m.section('tower', () => …)`).
 
 ### Step 4 · Check — must PASS
-`node bin/lego.mjs build <name>` runs the checker. **0 errors** before you continue. Every message says what is wrong, where (line of
+`lego build <name>` runs the checker. **0 errors** before you continue. Every message says what is wrong, where (line of
 build.mjs and grid position) and what to do. Fix the cause, not the symptom (a part "not connected" usually sits one plate too high, or
 on a smooth tile, or on the sloped face of a slope).
 
 ### Step 5 · Review — look at your own renders, critically
-`node bin/lego.mjs shots <name>` → `out/sheet.png` (six views) and `out/hero.png`. **Open and look at both images every round.**
+`lego shots <name>` → `out/sheet.png` (six views) and `out/hero.png`. **Open and look at both images every round.**
 Close-ups: `shots <name> --only <section>` renders one section alone. With a picture: `--ref <image> --view <angle>` → `out/compare.png`.
 (Shots you take during the blockout don't count as review rounds.)
 1. **Critique first**: write in `brief.md` at least five concrete problems you can see ("the left wall is a blank 10×12 white surface",
    "the tower is thinner than the door is wide", "the rock is a stepped rectangle"). Builders always rate their own work too high —
    assume a strict LEGO designer is looking.
-2. **Then score** with `docs/RUBRIC.md`, applying its caps (a cap is a ceiling: a big blank wall caps Detail at 5 however nice the rest is).
+2. **Then score** with the rubric (`lego docs rubric`), applying its caps (a cap is a ceiling: a big blank wall caps Detail at 5 however nice the rest is).
 3. Fix the lowest row first, then the next. Repeat steps 3–5 until every row is ≥ 7 — **at most 3 review rounds**; then deliver with an
    honest note of what is still weak.
 
@@ -78,7 +80,7 @@ Close-ups: `shots <name> --only <section>` renders one section alone. With a pic
 signature feature built. If something blocks you (a kit call fails), simplify that one feature and carry on — never deliver a blockout.
 
 ### Step 6 · Deliver
-Tell the user: what you built (one paragraph), the part count, the file to open (`sets/<name>/out/set.html`), and that `model.ldr`
+Tell the user: what you built (one paragraph), the part count, the file to open (`<sets>/<name>/out/set.html`), and that `model.ldr`
 opens in BrickLink Studio for building instructions and part ordering.
 
 ---
@@ -115,7 +117,7 @@ a vehicle 200–500; an object model 300–800; a landmark 500–1,500. A small 
 rocks, plants, a figure or two — not filler. A minifig-scale building is at least 10×8 studs and 2 storeys (or one storey + roof ≥ 30 plates). A space a minifigure stands in
 (a shop, a bus deck) needs ≥ 15 plates of headroom.
 
-**Living things** (people, pets, animals): use the moulded parts at minifig scale — `kit.minifig`, and the animals in `docs/PARTS.md`
+**Living things** (people, pets, animals): use the moulded parts at minifig scale — `kit.minifig`, and the animals (`lego parts animal`)
 (cats 11602 / 13786p03, dog 26078p01, birds, fish, frog). "My cat on the sofa" is a cosy minifig-scale room with a cat on the sofa,
 not a brick sculpture of a cat. Sculpting a living thing from bricks is the hardest thing in LEGO design; don't, unless asked for a
 display-scale sculpture.
@@ -125,7 +127,7 @@ plate laid over it (paving, a rug's plate), `g + 3` on a brick.
 
 ## 4. Colour
 - 4–8 colours. One main colour (the subject's material), one or two secondary, one or two accents used sparingly (doors, signs, flowers).
-- Take colours from the real thing / the picture, then pick the nearest LEGO colour (`docs/COLORS.md`). Stone is Tan, Light Bluish Gray or
+- Take colours from the real thing / the picture, then pick the nearest LEGO colour (`lego docs colors`). Stone is Tan, Light Bluish Gray or
   Dark Tan; wood is Reddish Brown or Dark Tan; roofs Dark Bluish Gray, Reddish Brown or Dark Red; glass Trans Clear or Trans Light Blue.
 - The base is neutral (Dark Bluish Gray, Tan, Green for grass) so the subject stands out.
 
@@ -144,8 +146,8 @@ plate laid over it (paving, a rug's plate), `g + 3` on a brick.
 
 ## 6. The build script (`build.mjs`)
 ```js
-import { Model } from '../../engine/model.mjs';
-import * as kit from '../../engine/kit.mjs';
+// build.mjs exports one function; `lego build` calls it with the toolkit and checks what it returns
+export default function build({ Model, kit }) {
 const m = new Model({ title: 'Corner Bakery', subtitle: 'a two-storey shop on a street corner', budget: [600, 1500] });
 const g = kit.base(m, { w: 32, d: 24, color: 'Dark Bluish Gray' });          // base: returns the plate level of its top (2)
 m.section('shop', () => {
@@ -156,13 +158,14 @@ m.section('shop', () => {
   kit.roof(m, { x: 4, y: g + 19, z: 6, w: 16, d: 10, color: 'Reddish Brown' });
 });
 kit.minifig(m, { x: 22, y: g, z: 18, torso: 'apron', shirt: 'White', face: 'smile', hair: 'bob', hairColor: 'Dark Brown' });
-export default m;
+return m;
+}
 ```
 ### Model methods
 | call | does |
 |---|---|
 | `new Model({ title, subtitle, budget: [min, max], focus, view })` | the set. `focus: '<section>'` frames the opening view closer on that section (the subject of a scene: the cat, the stall); `view: [azimuth°, elevation°]` sets the opening angle (default [35, 24]) |
-| `m.part(id, x, y, z, color, rot)` | any part from `docs/PARTS.md` |
+| `m.part(id, x, y, z, color, rot)` | any real part (`lego parts …` finds them) |
 | `m.brick(size, x, y, z, color, rot)` · `m.plate(…)` · `m.tile(…)` | a plain part by its LEGO size; rot 0 = long side along x, rot 1 = along z |
 | `m.box(x, y, z, w, d, h, color, { hollow, kind, top })` | fills w×d studs × h plates with bricks/plates, joints staggered automatically. `h` multiple of 3 → bricks; `kind: 'plate'` slabs, `'tile'` smooth floors/paths; `hollow: true` = walls one stud thick; `top: 'plate'` = a solid lid on a hollow box (needed for anything narrower built on top: a setback, a chimney); `top: 'tile'` = a solid lid finished with tiles |
 | `m.cut(x, y, z, w, d, h)` | removes the box() volume built so far in a region (openings, inlays): box first, then cut (kits cut their own openings) |
@@ -172,7 +175,7 @@ export default m;
 `box()` volumes are turned into real bricks after build.mjs runs. Parts placed with `part()` and box volumes may not overlap — cut the box.
 `brick/plate/tile` take the LEGO name of the size (`'1x4'`, `'2x6'` — order doesn't matter) and a `rot`: **rot 0 lays the long side
 left–right (along x), rot 1 front–back (along z)**. `m.plate('1x6', 3, 1, 0, 'Tan')` runs from x 3 to 8; `m.plate('1x6', 3, 1, 0, 'Tan', 1)` from z 0 to 5.
-To see any part's studs and anti-studs from above: `node bin/lego.mjs part <id>`.
+To see any part's studs and anti-studs from above: `lego part <id>`.
 Tiles have no studs on top: nothing can be built on them (that is the point) — except that a part placed directly on a tiled
 `box()` floor (a figure, a table, a lamp) gets the tiles under it turned into plates automatically, as a builder would leave studs there. Studs only connect to a part whose bottom is exactly on them.
 A part centred on an even-width part (a 1×1 on a 2×2) needs a jumper plate (15573, 87580) under it.
@@ -225,7 +228,7 @@ of the wall, so keep that strip in front clear. A sign is 1 stud tall per letter
 - Warnings (budget, specialty share, colour count) are about quality: take them seriously.
 
 ## 8. Don'ts
-- Don't invent parts or ids: only `docs/PARTS.md`. Don't use parts your scale cannot read (a 1×1 tile as a "window" at minifig scale).
+- Don't invent parts or ids: only parts `lego parts` lists. Don't use parts your scale cannot read (a 1×1 tile as a "window" at minifig scale).
 - Don't leave the subject on bare studs floating in space: scenes get a base; objects stand on their own feet/bottom.
 - Don't stack everything as solid brick; don't make 2,000 parts of filler.
 - Don't skip looking at the renders. The checker proves it can be built, not that it looks right.

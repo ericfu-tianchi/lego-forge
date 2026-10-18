@@ -1,8 +1,7 @@
 // Worked example · display scale: a 1980s home computer on a desk. Read it as a pattern for objects: smooth (tiled) tops,
 // a recessed screen made with SNOT (kit.panel), lettering (kit.sign), grilles and round tiles for detail, a tiled display stand.
-import { Model } from '../../engine/model.mjs';
-import * as kit from '../../engine/kit.mjs';
 
+export default function build({ Model, kit }) {
 const m = new Model({ title: 'Home Computer 1984', subtitle: 'a beige desktop with its monitor and keyboard', budget: [300, 900] });
 const g = kit.base(m, { w: 30, d: 24, color: 'Reddish Brown', under: 'Dark Brown' });     // the desk top
 const CASE = { x: 5, z: 3, w: 20, d: 12 }, KEYS = { x: 6, z: 17, w: 18, d: 5 };
@@ -45,4 +44,5 @@ m.section('keyboard', () => {
 });
 // ---- a floppy disk
 m.section('disk', () => { m.cut(2, g, 18, 3, 3, 1); m.plate('2x3', 2, g, 18, 'Black', 1); m.plate('1x3', 4, g, 18, 'Black', 1); m.tile('2x2', 2, g + 1, 19, 'White'); m.tile('1x2', 4, g + 1, 18, 'Flat Silver', 1); });
-export default m;
+return m;
+}
