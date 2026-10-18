@@ -220,6 +220,7 @@ of the wall, so keep that strip in front clear. A sign is 1 stud tall per letter
 
 ## 7. Checker messages and what they mean
 - **passes through** — two parts occupy the same space. Move one; or you placed a part *and* a box volume in the same cells (cut the box).
+  A part standing on a tiled floor (box tiles or placed tiles) gets the tiles under it turned into plates automatically.
   Collision is checked per stud column: under an arch's opening or a slope's low side there is room; elsewhere a part fills its whole footprint.
 - **not connected to the rest of the set** — the message lists the parts of the loose group. It sits on nothing, on a tile (smooth top), on the sloped face of a slope, between plate levels,
   or on studs that don't line up with its underside. Put it exactly on top of studs.

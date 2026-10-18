@@ -8,6 +8,6 @@ description: Design a real, buildable LEGO set from an idea or a picture — rea
 This folder is the toolkit. Its command line is `node <this folder>/bin/lego.mjs`.
 
 1. Run `node <this folder>/bin/lego.mjs guide` and follow the guide it prints, exactly — it is the whole method
-   (brief → blockout → detail → check → self-review → deliver). Call the CLI as `node <this folder>/bin/lego.mjs` wherever the guide writes `lego`.
+   (brief → blockout → detail → check → self-review → deliver). The guide writes `lego …`: always type the full `node <this folder>/bin/lego.mjs …` instead (there is no `lego` command on the PATH; don't define an alias).
 2. Work in the user's current folder: sets are created in `./lego-sets/<name>/`; the user opens `./lego-sets/<name>/out/set.html`.
 3. The first run installs the toolkit's dependencies and, for review images, a headless browser (once).

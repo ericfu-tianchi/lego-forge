@@ -86,7 +86,7 @@ export class Model {
     const tileParts = this.parts.filter((q) => !q.free && tileToPlate[q.id]);
     for (const p of this.parts) { if (p.free || tileToPlate[p.id]) continue; const r = resolveP(p); for (const [fx, fz] of r.female) {
       const k = `${Math.floor(fx)},${p.y - 1},${Math.floor(fz)}`; const v = this.vox.get(k); if (v && v.kind === 'tile') this.vox.set(k, { ...v, kind: 'plate', unit: (v.unit ?? '') + '~stand' });
-      for (const q of tileParts) { if (q.y !== p.y - 1) continue; const d = partDef(q.id); const [fw, fd] = footprint(d, q.rot); if (fx > q.x && fx < q.x + fw && fz > q.z && fz < q.z + fd) q.id = tileToPlate[q.id]; } } }   // a placed tile too
+      for (const q of tileParts) { if (q.y !== p.y - 1 || !tileToPlate[q.id]) continue; const d = partDef(q.id); const [fw, fd] = footprint(d, q.rot); if (fx > q.x && fx < q.x + fw && fz > q.z && fz < q.z + fd) q.id = tileToPlate[q.id]; } } }   // a placed tile too
     if (!this.vox.size) return this;
     const layers = new Map(); for (const k of this.vox.keys()) { const [x, y, z] = k.split(',').map(Number); if (!layers.has(y)) layers.set(y, []); layers.get(y).push([x, z]); }
     const used = new Set(); const ys = [...layers.keys()].sort((a, b) => a - b);

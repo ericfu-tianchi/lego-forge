@@ -5,7 +5,7 @@ export const CATALOG = JSON.parse(fs.readFileSync(path.join(DIR, 'parts/catalog.
 const ALIAS = {};   // retired ids the LDraw library renamed (3023 → 3023b): accept the common number
 for (const id of Object.keys(CATALOG)) { const m = /^(\d+)[a-c]$/.exec(id); if (m && !CATALOG[m[1]]) ALIAS[m[1]] = id; }
 export function part(id) { id = String(id).toLowerCase().replace(/\.dat$/, ''); return CATALOG[id] ?? CATALOG[ALIAS[id]] ?? null; }
-export const footprint = (def, rot) => (rot % 2 === 0 ? [def.w, def.d] : [def.d, def.w]);
+export const footprint = (def, rot) => (!def ? [1, 1] : rot % 2 === 0 ? [def.w, def.d] : [def.d, def.w]);
 export const PL = 0.4;   // a plate, in studs
 /** rotate an offset (x, z) about the vertical axis by rot quarter turns (counter-clockwise seen from above: +x → −z) */
 export const turn = (x, z, rot) => [[x, z], [z, -x], [-x, -z], [-z, x]][rot & 3];
