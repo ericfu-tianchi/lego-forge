@@ -11,4 +11,5 @@ This folder is the toolkit. Its command line is `node <this folder>/bin/lego.mjs
    (brief → blockout → detail → check → self-review → deliver). The guide writes `lego …`: always type the full `node <this folder>/bin/lego.mjs …` instead (there is no `lego` command on the PATH; don't define an alias).
 2. Work in the user's current folder: sets are created in `./lego-sets/<name>/`. When it is done, run `lego open <name>` and give the user
    the printed link as a clickable link first — they should be one click from seeing their set.
-3. The first run installs the toolkit's dependencies and, for review images, a headless browser (once).
+3. The first run installs the toolkit's dependencies and, for review images, a headless browser (once). The method depends on looking at
+   those images: if rendering is blocked (sandbox, permissions), stop and ask the user to allow it — don't carry on without them.

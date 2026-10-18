@@ -40,8 +40,13 @@ if (cmd === 'build') {
   const rep = fs.existsSync(path.join(out, 'report.txt')) ? fs.readFileSync(path.join(out, 'report.txt'), 'utf8') : ''; if (rep.startsWith('FAIL')) console.log('! the last build FAILED the check — these images show a model that cannot be built as is');
   if (fs.statSync(path.join(dir, 'build.mjs')).mtimeMs > fs.statSync(page).mtimeMs) console.log('! build.mjs changed since the last build — run `lego build` first');
   let chromium; try { ({ chromium } = await import('playwright')); } catch { console.error('shots need Playwright: npm i -D playwright && npx playwright install chromium'); process.exit(1); }
-  const launch = () => chromium.launch({ args: ['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--use-gl=angle'] });
-  let browser; try { browser = await launch(); } catch (e) { if (!/Executable doesn't exist|install/i.test(String(e))) throw e; console.error('· first run: downloading the headless browser for renders…'); execSync('npx playwright install chromium', { cwd: ROOT, stdio: 'inherit' }); browser = await launch(); }
+  // GPU first; then a software renderer without Chromium's own sandbox (agent sandboxes such as Codex's often block Chromium's)
+  const ARGS = [['--use-angle=metal', '--enable-gpu', '--ignore-gpu-blocklist', '--use-gl=angle'], ['--no-sandbox', '--disable-setuid-sandbox', '--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']];
+  const launch = async () => { let last; for (const args of ARGS) { try { return await chromium.launch({ args, chromiumSandbox: false }); } catch (e) { last = e; } } throw last; };
+  let browser; try { browser = await launch(); } catch (e) {
+    if (/Executable doesn't exist|install/i.test(String(e))) { console.error('· first run: downloading the headless browser for renders…'); try { execSync('npx playwright install chromium', { cwd: ROOT, stdio: 'inherit' }); browser = await launch(); } catch (e2) { e = e2; } }
+    if (!browser) { console.error(`✗ RENDERING IS BLOCKED IN THIS ENVIRONMENT — the review images could not be made.\n  ${String(e).split('\n')[0]}\n\n  STOP and ask the user now, before building further: the review loop needs these images.\n  Tell them: "I can't run the headless browser for review renders here. Please allow it — approve running \`lego shots\` with full permissions (Codex: allow the command outside the sandbox / restart with --sandbox danger-full-access; Claude Code: approve the command)."\n  Do not deliver a set you have not looked at.`); process.exit(3); }
+  }
   const shot = async (q, file, w, h) => { const pg = await browser.newPage({ viewport: { width: w, height: h } }); await pg.goto(pathToFileURL(page).href + '?' + q); await pg.waitForFunction(() => window.__ready === true, null, { timeout: 120000 }); await pg.waitForTimeout(200); await pg.screenshot({ path: file }); await pg.close(); };
   const sfx = only ? `-${only}` : ''; const oq = only ? `&only=${encodeURIComponent(only)}` : '';
   await shot('sheet' + oq, path.join(out, `sheet${sfx}.png`), 1800, 1200);

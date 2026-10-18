@@ -23,7 +23,12 @@ glance, the proportions are right, it looks designed. Target **300–1,500 parts
 
 ## 0. Setup
 Nothing to do: the first `lego` command installs its dependencies, and the first `lego shots` downloads the headless browser it renders
-with (about 100 MB, once). If that download is impossible where you run, build and check anyway and tell the user the review images are missing.
+with (about 100 MB, once).
+
+**Seeing your renders is not optional.** The review loop (step 5) is where a set goes from "passes the check" to "looks right"; a set built
+without it is a draft. If `lego shots` fails — a sandbox blocks the browser or its download, a permission is denied — **stop and ask the
+user right away** to allow it (approve the command / run it with full permissions), then continue. Never work around it silently, and never
+deliver a set whose renders you have not looked at.
 
 ## 1. The pipeline — follow it in order
 
